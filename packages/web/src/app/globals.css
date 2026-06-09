@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/* ── DESIGN.md color tokens ──────────────────────────────────────────────── */
+
+:root {
+  /* App surfaces */
+  --color-app-bg:           #F6F8FA;
+  --color-surface:          #FFFFFF;
+  --color-surface-muted:    #F0F3F6;
+  --color-border:           #D8DEE4;
+
+  /* Text */
+  --color-text-primary:     #24292F;
+  --color-text-secondary:   #57606A;
+  --color-text-muted:       #6E7781;
+
+  /* Brand / accent */
+  --color-primary:          #0969DA;
+  --color-primary-hover:    #0550AE;
+  --color-success:          #1A7F37;
+  --color-warning:          #9A6700;
+  --color-danger:           #CF222E;
+  --color-info:             #0969DA;
+
+  /* Code */
+  --color-code-bg:          #F6F8FA;
+
+  /* Severity chips */
+  --color-severity-high-bg:     #FFEBE9;
+  --color-severity-high-text:   #CF222E;
+  --color-severity-medium-bg:   #FFF8C5;
+  --color-severity-medium-text: #9A6700;
+  --color-severity-low-bg:      #DDF4FF;
+  --color-severity-low-text:    #0969DA;
+}
+
+/* ── Tailwind v4 theme extension ─────────────────────────────────────────── */
+
+@theme inline {
+  --color-app-bg:           var(--color-app-bg);
+  --color-surface:          var(--color-surface);
+  --color-surface-muted:    var(--color-surface-muted);
+  --color-border:           var(--color-border);
+
+  --color-text-primary:     var(--color-text-primary);
+  --color-text-secondary:   var(--color-text-secondary);
+  --color-text-muted:       var(--color-text-muted);
+
+  --color-primary:          var(--color-primary);
+  --color-primary-hover:    var(--color-primary-hover);
+  --color-success:          var(--color-success);
+  --color-warning:          var(--color-warning);
+  --color-danger:           var(--color-danger);
+  --color-info:             var(--color-info);
+
+  --color-code-bg:          var(--color-code-bg);
+
+  --color-severity-high-bg:     var(--color-severity-high-bg);
+  --color-severity-high-text:   var(--color-severity-high-text);
+  --color-severity-medium-bg:   var(--color-severity-medium-bg);
+  --color-severity-medium-text: var(--color-severity-medium-text);
+  --color-severity-low-bg:      var(--color-severity-low-bg);
+  --color-severity-low-text:    var(--color-severity-low-text);
+
+  /* Layout constants */
+  --sidebar-width:  248px;
+  --topbar-height:  56px;
+
+  /* Typography */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+
+  /* Border radius */
+  --radius-card:  6px;
+  --radius-badge: 4px;
+}
+
+/* ── Base styles ──────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  background-color: var(--color-app-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+}
+
+/* ── Focus visible ────────────────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface-muted);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}

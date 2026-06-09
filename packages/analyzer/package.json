@@ -1,0 +1,77 @@
+{
+  "name": "github-pr-code-smell-detector",
+  "description": "React and Next.js Pull Request code smell analyzer",
+  "version": "0.0.0",
+  "author": "kichmi",
+  "bin": {
+    "code-smell-detector": "./bin/run.js"
+  },
+  "bugs": "https://github.com/leducanhphuongdev/github-pr-code-smell-detector/issues",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.1",
+    "@oclif/core": "^4",
+    "@oclif/plugin-help": "^6",
+    "@typescript-eslint/typescript-estree": "^8.61.0",
+    "js-yaml": "^4.2.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/compat": "^1",
+    "@oclif/prettier-config": "^0.2.1",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.19.20",
+    "eslint": "^9",
+    "eslint-config-oclif": "^6",
+    "eslint-config-prettier": "^10",
+    "oclif": "^4",
+    "shx": "^0.3.3",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "files": [
+    "./bin",
+    "./dist",
+    "./oclif.manifest.json"
+  ],
+  "homepage": "https://github.com/leducanhphuongdev/github-pr-code-smell-detector",
+  "keywords": [
+    "oclif",
+    "code-smell",
+    "react",
+    "nextjs",
+    "github-actions"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "type": "module",
+  "oclif": {
+    "bin": "code-smell-detector",
+    "dirname": "code-smell-detector",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help"
+    ],
+    "topicSeparator": " "
+  },
+  "repository": "https://github.com/leducanhphuongdev/github-pr-code-smell-detector",
+  "scripts": {
+    "build": "shx rm -rf dist && tsc -b",
+    "build:action": "tsup",
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "prepack": "oclif manifest && oclif readme",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "version": "oclif readme && git add README.md"
+  },
+  "types": "dist/index.d.ts"
+}

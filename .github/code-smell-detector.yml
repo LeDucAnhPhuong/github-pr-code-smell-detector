@@ -1,0 +1,56 @@
+# GitHub PR Code Smell Detector — Example Configuration
+# Copy this file to .github/code-smell-detector.yml in the repository you want to analyze.
+
+blocking: false
+
+targetPaths:
+  - app
+  - pages
+  - components
+  - hooks
+  - features
+  - src
+
+excludePaths:
+  - node_modules
+  - dist
+  - .next
+  - out
+  - build
+  - coverage
+
+rules:
+  react/no-large-component:
+    enabled: true
+    severity: warning
+    threshold: 150
+    blocking: false
+
+  react/too-many-props:
+    enabled: true
+    severity: warning
+    threshold: 7
+    blocking: false
+
+  react/too-many-states:
+    enabled: true
+    severity: warning
+    threshold: 5
+    blocking: false
+
+  react/complex-jsx:
+    enabled: true
+    severity: warning
+    threshold: 5
+    blocking: false
+
+  react/inline-function-overuse:
+    enabled: true
+    severity: warning
+    threshold: 3
+    blocking: false
+
+  react/mixed-responsibility:
+    enabled: true
+    severity: warning
+    blocking: false

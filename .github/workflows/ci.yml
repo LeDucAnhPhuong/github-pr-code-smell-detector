@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/analyzer
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: packages/analyzer/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test (vitest)
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Check bundle freshness
+        run: |
+          npm run build:action
+          git diff --exit-code packages/analyzer/dist/action.js || (echo "dist/action.js is stale — run npm run build:action" && exit 1)
+        working-directory: .
+        continue-on-error: true

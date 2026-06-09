@@ -1,0 +1,36 @@
+name: 'GitHub PR Code Smell Detector'
+description: 'Analyzes React and Next.js Pull Requests for code smells'
+author: 'kichmi'
+
+inputs:
+  github-token:
+    description: 'GitHub token with pull-requests:write and checks:write permissions'
+    required: true
+    default: ${{ github.token }}
+  config-path:
+    description: 'Path to the configuration file'
+    required: false
+    default: '.github/code-smell-detector.yml'
+  base-ref:
+    description: 'Base ref for changed file detection (defaults to PR base)'
+    required: false
+  blocking:
+    description: 'Exit with code 1 when blocking findings are detected'
+    required: false
+    default: 'false'
+
+outputs:
+  findings-count:
+    description: 'Total number of findings detected'
+  error-count:
+    description: 'Number of error-severity findings'
+  warning-count:
+    description: 'Number of warning-severity findings'
+
+runs:
+  using: node20
+  main: packages/analyzer/dist/action.js
+
+branding:
+  icon: 'search'
+  color: 'blue'
