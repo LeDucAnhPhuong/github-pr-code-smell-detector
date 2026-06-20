@@ -10,7 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3001"),
+  // Use `||` (not `??`) so an empty-string build arg also falls back.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001"),
   title: "MergeTrack: Catch code smells before they merge",
   description:
     "MergeTrack analyzes the changed lines in every Pull Request and flags maintainability issues, ranked by severity, before they reach your main branch.",

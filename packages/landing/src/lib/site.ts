@@ -1,6 +1,6 @@
 // Where the landing's CTAs send people. Override per environment.
 export const dashboardUrl =
-  process.env.NEXT_PUBLIC_DASHBOARD_URL ?? "http://localhost:3000";
+  process.env.NEXT_PUBLIC_DASHBOARD_URL || "http://localhost:3000";
 
 export const loginUrl = `${dashboardUrl}/login`;
 
