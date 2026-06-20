@@ -71,7 +71,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    command: ["npm", "run", "db:deploy", "-w", "packages/web"]
+    command: ["npm", "run", "db:deploy", "-w", "packages/dashboard"]
     environment:
       DATABASE_URL: ${DATABASE_URL}
     depends_on:
@@ -123,6 +123,29 @@ services:
     networks:
       - edge
       - internal
+
+  # ── Landing site (marketing) at the apex ${LANDING_DOMAIN} (+ www).
+  #   The dashboard keeps ${DOMAIN} (e.g. app.mergetrack.site); landing takes
+  #   the apex. NEXT_PUBLIC_* are inlined at BUILD time, hence passed as build args.
+  landing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: landing-runner
+      args:
+        NEXT_PUBLIC_DASHBOARD_URL: https://${DOMAIN}
+        NEXT_PUBLIC_SITE_URL: https://${LANDING_DOMAIN}
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=csd-prod_edge
+      - "traefik.http.routers.landing.rule=Host(`${LANDING_DOMAIN}`) || Host(`www.${LANDING_DOMAIN}`)"
+      - traefik.http.routers.landing.entrypoints=websecure
+      - traefik.http.routers.landing.tls=true
+      - traefik.http.routers.landing.tls.certresolver=le
+      - traefik.http.services.landing.loadbalancer.server.port=3000
+    networks:
+      - edge
 
   worker:
     build:

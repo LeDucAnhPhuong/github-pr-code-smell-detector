@@ -50,7 +50,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up -d --bui
 
 # 4. Seed dữ liệu nền (plans + rules + frameworks + categories) — chạy MỘT lần
 docker compose -f docker-compose.prod.yml --env-file .env.production \
-  run --rm migrate npm run db:seed -w packages/web
+  run --rm migrate npm run db:seed -w packages/dashboard
 ```
 
 Mở `https://<DOMAIN>` → lần đầu Traefik xin cert (mất vài giây). Đăng nhập GitHub.
@@ -90,7 +90,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production down -v
 Hạ tầng Docker/Traefik đã sẵn sàng, nhưng phần logic vẫn còn:
 
 - **Worker chưa nối analyzer** → job phân tích trả về **0 findings**
-  (`packages/web/worker/processors/analysis.processor.ts`). Đây là tính năng lõi.
+  (`packages/dashboard/worker/processors/analysis.processor.ts`). Đây là tính năng lõi.
 - Code context ở Finding Detail là placeholder.
 - Một số nút (Re-run, Sync PRs, Cancel subscription…) còn stub.
 - `dist/action.js` của analyzer chưa build & commit (chỉ ảnh hưởng GitHub Action, không ảnh hưởng web).

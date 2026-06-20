@@ -1,0 +1,107 @@
+import { auth, signIn } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import Image from "next/image";
+import { Shield, Github, AlertCircle } from "lucide-react";
+
+interface LoginPageProps {
+  searchParams: Promise<{ error?: string; callbackUrl?: string }>;
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const [session, params] = await Promise.all([auth(), searchParams]);
+
+  if (session?.user) {
+    redirect("/");
+  }
+
+  const error = params.error;
+
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ backgroundColor: "var(--color-app-bg)" }}
+    >
+      <div
+        className="w-full max-w-sm rounded-lg border p-8 shadow-sm"
+        style={{
+          backgroundColor: "var(--color-surface)",
+          borderColor: "var(--color-border)",
+        }}
+      >
+        {/* Product mark — full logo with slogan */}
+        <div className="flex justify-center mb-6">
+          <Image
+            src="/logo-with-text.png"
+            alt="MergeTrack — Track. Review. Merge."
+            width={180}
+            height={180}
+            priority
+            style={{ height: "auto", width: 160 }}
+          />
+        </div>
+
+        {/* Value statement */}
+        <h1
+          className="text-xl font-semibold mb-2"
+          style={{ color: "var(--color-text-primary)" }}
+        >
+          Sign in to your account
+        </h1>
+        <p className="text-sm mb-6" style={{ color: "var(--color-text-secondary)" }}>
+          Detect maintainability issues in Pull Request changes before merge.
+        </p>
+
+        {/* Error alert */}
+        {error && (
+          <div
+            className="flex items-start gap-2 rounded-md p-3 mb-4 text-sm"
+            style={{
+              backgroundColor: "var(--color-severity-high-bg)",
+              color: "var(--color-severity-high-text)",
+              border: "1px solid #f1aeb5",
+            }}
+          >
+            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+            <span>
+              {error === "OAuthCallbackError" || error === "Callback"
+                ? "GitHub authorization failed. Please try again."
+                : error === "AccessDenied"
+                ? "Repository access permission is required to show connected repositories."
+                : "An error occurred during sign in. Please try again."}
+            </span>
+          </div>
+        )}
+
+        {/* GitHub OAuth button */}
+        <form
+          action={async () => {
+            "use server";
+            await signIn("github");
+          }}
+        >
+          <button type="submit" className="btn btn-primary" style={{ width: "100%", justifyContent: "center", height: 40 }}>
+            <Github className="w-4 h-4" />
+            Continue with GitHub
+          </button>
+        </form>
+
+        {/* Secondary text */}
+        <p className="text-xs mt-4 text-center" style={{ color: "var(--color-text-muted)" }}>
+          Uses GitHub OAuth. Repository access is limited to authorized repositories.
+        </p>
+
+        {/* Security note */}
+        <div
+          className="flex items-center gap-2 mt-4 p-2.5 rounded-md text-xs"
+          style={{
+            backgroundColor: "var(--color-surface-muted)",
+            color: "var(--color-text-secondary)",
+          }}
+        >
+          <Shield className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--color-success)" }} />
+          <span>No source code is uploaded to third-party services in MVP mode.</span>
+        </div>
+      </div>
+    </div>
+  );
+}

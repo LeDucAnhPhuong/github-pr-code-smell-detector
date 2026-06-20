@@ -7,7 +7,8 @@ Monorepo gồm 2 phần chạy độc lập:
 | Package | Là gì | Cần gì để chạy |
 |---|---|---|
 | `packages/analyzer` | CLI + GitHub Action phân tích code smell | Chỉ Node.js |
-| `packages/web` | Web dashboard (Next.js 16) | Node.js + PostgreSQL + Redis + GitHub OAuth |
+| `packages/dashboard` | Web dashboard (Next.js 16, cổng 3000) | Node.js + PostgreSQL + Redis + GitHub OAuth |
+| `packages/landing` | Landing marketing (Next.js 16, cổng 3001) | Chỉ Node.js (static) |
 
 ---
 
@@ -72,10 +73,10 @@ npm run build:action
 
 ### 3.1 Khởi động Postgres + Redis bằng Docker
 
-File `packages/web/docker-compose.yml` đã có sẵn. Postgres ánh xạ ra **host port 5433** (để không đụng Postgres native trên 5432 nếu có), Redis ở **6379**.
+File `packages/dashboard/docker-compose.yml` đã có sẵn. Postgres ánh xạ ra **host port 5433** (để không đụng Postgres native trên 5432 nếu có), Redis ở **6379**.
 
 ```bash
-cd packages/web
+cd packages/dashboard
 docker compose up -d           # tạo & chạy 2 container
 docker compose ps              # kiểm tra: cả 2 phải "healthy"
 ```
@@ -89,7 +90,7 @@ docker compose down -v         # dừng + xoá sạch volume
 
 ### 3.2 File `.env`
 
-File `packages/web/.env` đã được tạo sẵn cho môi trường Docker ở trên (DATABASE_URL trỏ tới `localhost:5433`, REDIS_URL tới `localhost:6379`, đã sinh sẵn `NEXTAUTH_SECRET` và `GITHUB_WEBHOOK_SECRET`).
+File `packages/dashboard/.env` đã được tạo sẵn cho môi trường Docker ở trên (DATABASE_URL trỏ tới `localhost:5433`, REDIS_URL tới `localhost:6379`, đã sinh sẵn `NEXTAUTH_SECRET` và `GITHUB_WEBHOOK_SECRET`).
 
 **Chỉ còn thiếu GitHub OAuth** (bắt buộc nếu muốn đăng nhập — không thể tự động hoá):
 
@@ -106,7 +107,7 @@ File `packages/web/.env` đã được tạo sẵn cho môi trường Docker ở
 ### 3.3 Khởi tạo database
 
 ```bash
-cd packages/web
+cd packages/dashboard
 npm run db:generate            # sinh Prisma Client
 npm run db:migrate             # tạo bảng (lần đầu đặt tên migration: "init")
 npm run db:seed                # seed plans + rules + frameworks + categories
@@ -126,7 +127,7 @@ npm run dev
 > Pane: `[analyzer]` tsc watch · `[web]` Next.js · `[worker]` BullMQ. Nhấn `Ctrl+C` tắt cả 3.
 > Cần Docker (mục 3.1) đã chạy trước. Muốn bỏ worker, dùng `npm run dev:apps` (chỉ analyzer + web).
 
-Hoặc chạy thủ công từng phần trong `packages/web` (2 terminal):
+Hoặc chạy thủ công từng phần trong `packages/dashboard` (2 terminal):
 
 ```bash
 npm run dev                    # http://localhost:3000
@@ -143,15 +144,30 @@ npm run db:studio              # Prisma Studio xem/sửa DB
 
 ---
 
+## 3b. Chạy LANDING (trang marketing)
+
+Landing là Next.js tĩnh, không cần DB/Redis. Chạy ở **cổng 3001** (độc lập dashboard):
+
+```bash
+cd github-pr-code-smell-detector
+npm run dev:landing            # http://localhost:3001
+```
+
+Nút "Get started" / "Sign in" trỏ về dashboard qua `NEXT_PUBLIC_DASHBOARD_URL`
+(mặc định `http://localhost:3000`). Xem `packages/landing/.env.example`.
+
+---
+
 ## 4. Tóm tắt cổng (port)
 
 | Dịch vụ | Cổng | Nguồn |
 |---|---|---|
-| Web (Next.js) | 3000 | `npm run dev` |
+| Dashboard (Next.js) | 3000 | `npm run dev:dashboard` |
+| Landing (Next.js) | 3001 | `npm run dev:landing` |
 | PostgreSQL (Docker) | **5433** → 5432 trong container | `docker-compose.yml` |
 | Redis (Docker) | 6379 | `docker-compose.yml` |
 
-> Nếu cổng 3000 đang bận, Next sẽ tự nhảy sang 3001/3002 và in URL trong log.
+> Nếu cổng đang bận, Next sẽ tự nhảy cổng khác và in URL trong log.
 
 ---
 
@@ -174,7 +190,7 @@ Khi verify, các vấn đề sau đã được khắc phục:
 
 - **Worker phân tích** (`worker/processors/analysis.processor.ts`): hiện hoàn thành job với 0 findings. Cần nối với `packages/analyzer` khi analyzer export API lập trình được (analyzer **đã** export `analyze()` ở `src/index.ts` — có thể tích hợp).
 - **Code context** ở trang Finding Detail: placeholder, cần gọi GitHub API lấy nội dung file thật.
-- Một số nút (Re-run, Sync PRs, Cancel subscription...) — xem chi tiết ở `packages/web/TONG-KET-IMPLEMENTATION.md` mục 5.
+- Một số nút (Re-run, Sync PRs, Cancel subscription...) — xem chi tiết ở `packages/dashboard/TONG-KET-IMPLEMENTATION.md` mục 5.
 - **GitHub Webhook** chỉ cần khi test luồng PR thật → dùng `ngrok http 3000` để có public URL.
 
 ---
@@ -186,5 +202,5 @@ Khi verify, các vấn đề sau đã được khắc phục:
 | `docs/usage.md` | Dùng CLI + cài GitHub Action |
 | `docs/configuration.md` | Toàn bộ trường cấu hình `.github/code-smell-detector.yml` |
 | `docs/rules/react/*.md` | Tài liệu từng rule |
-| `packages/web/TONG-KET-IMPLEMENTATION.md` | Chi tiết kiến trúc web, màn hình, API, env, dịch vụ ngoài |
+| `packages/dashboard/TONG-KET-IMPLEMENTATION.md` | Chi tiết kiến trúc web, màn hình, API, env, dịch vụ ngoài |
 | `TRANG-THAI-TRIEN-KHAI.md` | Trạng thái triển khai (xem ghi chú cập nhật ở đầu file) |

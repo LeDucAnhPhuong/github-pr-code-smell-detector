@@ -27,7 +27,8 @@ RAM/CPU giảm mạnh. Đây là lý do nên tách build và run.
 | `traefik` | traefik:v3.3 | ~50–100 MB | Reverse proxy + TLS Let's Encrypt, mở cổng 80/443 |
 | `postgres` | postgres:17 | ~100–200 MB | Dữ liệu lưu volume `pgdata`, lớn dần theo số PR/finding |
 | `redis` | redis:7 | ~20–50 MB | Hàng đợi BullMQ |
-| `web` | image của bạn (target `runner`) | ~150–300 MB | Next.js standalone, Node 24, cổng nội bộ 3000 |
+| `web` | image của bạn (target `runner`) | ~150–300 MB | Next.js standalone, Node 24, cổng nội bộ 3000 → `app.mergetrack.site` |
+| `landing` | image của bạn (target `landing-runner`) | ~120–200 MB | Next.js tĩnh, cổng nội bộ 3000 → apex `mergetrack.site` (+ `www`) |
 | `worker` | image của bạn (target `worker`) | ~150–300 MB | BullMQ worker; **tăng vọt** CPU/RAM khi clone repo + parse AST lúc phân tích |
 | `migrate` | image của bạn (target `worker`) | chạy 1 lần rồi tắt | Chạy `prisma migrate deploy` trước khi web/worker khởi động |
 
@@ -83,12 +84,17 @@ Cần đưa cả hai target lên VPS. Có 2 cách:
 
 ```bash
 # === TRÊN MÁY LOCAL (ở thư mục gốc monorepo) ===
-# Build 2 target thành 2 tag riêng
+# Build 3 target thành 3 tag riêng
 docker build -t <registry>/csd-web:latest    --target runner .
 docker build -t <registry>/csd-worker:latest --target worker .
+# Landing: NEXT_PUBLIC_* được nhúng lúc BUILD nên phải truyền --build-arg
+docker build -t <registry>/csd-landing:latest --target landing-runner \
+  --build-arg NEXT_PUBLIC_DASHBOARD_URL=https://app.mergetrack.site \
+  --build-arg NEXT_PUBLIC_SITE_URL=https://mergetrack.site .
 
 docker push <registry>/csd-web:latest
 docker push <registry>/csd-worker:latest
+docker push <registry>/csd-landing:latest
 ```
 
 ```bash
@@ -126,7 +132,7 @@ Phần thay đổi cho 3 service `migrate`, `web`, `worker`:
 ```yaml
   migrate:
     image: <registry>/csd-worker:latest   # hoặc csd-worker:latest nếu dùng Cách B
-    command: ["npm", "run", "db:deploy", "-w", "packages/web"]
+    command: ["npm", "run", "db:deploy", "-w", "packages/dashboard"]
     # ... (giữ nguyên environment / depends_on / networks như file gốc)
 
   web:
@@ -152,7 +158,7 @@ docker compose -f docker-compose.vps.yml --env-file .env.production up -d
 
 # 3. Seed dữ liệu nền — chạy MỘT lần đầu tiên
 docker compose -f docker-compose.vps.yml --env-file .env.production \
-  run --rm migrate npm run db:seed -w packages/web
+  run --rm migrate npm run db:seed -w packages/dashboard
 ```
 
 > ⚠️ Vì bạn không clone source lên VPS, hãy chuẩn bị sẵn `docker-compose.vps.yml` và
@@ -212,8 +218,9 @@ Có thể thêm vào từng service trong compose:
 - [ ] VPS Linux amd64 (Ubuntu 22.04/24.04), **2 vCPU / 4 GB** (hoặc tối thiểu 1 vCPU / 2 GB + swap).
 - [ ] Đã cài Docker Engine + Compose v2.
 - [ ] Kiến trúc image build ở local **khớp** kiến trúc VPS (amd64 ↔ amd64).
-- [ ] Domain đã trỏ `A`/`AAAA` về IP VPS; mở cổng 80 & 443.
-- [ ] Đã đẩy image `csd-web` + `csd-worker` lên VPS (Cách A hoặc B).
+- [ ] DNS đã trỏ về IP VPS: `app.mergetrack.site` (web), `mergetrack.site` + `www.mergetrack.site` (landing); mở cổng 80 & 443.
+- [ ] Đã đẩy image `csd-web` + `csd-worker` + `csd-landing` lên VPS (Cách A hoặc B).
+- [ ] **Đăng ký lại** GitHub OAuth callback + GitHub App webhook/setup URL sang `app.mergetrack.site` (dashboard đã đổi domain).
 - [ ] Có `docker-compose.vps.yml` (dùng `image:`) + `.env.production` đã điền đủ.
 - [ ] Đã bật swap nếu RAM ≤ 2 GB.
 - [ ] Chạy `up -d` → seed DB 1 lần → mở `https://<DOMAIN>` kiểm tra.

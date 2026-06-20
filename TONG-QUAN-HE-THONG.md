@@ -39,7 +39,7 @@ github-pr-code-smell-detector/        ← gốc monorepo (npm workspaces)
 **Hai project chính:**
 
 1. **`packages/analyzer`** — engine phân tích. Thuần Node.js, không cần database. Là một CLI (oclif) đồng thời export được hàm `analyze()` để project khác gọi.
-2. **`packages/web`** — dashboard Next.js 16. Cần PostgreSQL + Redis + GitHub OAuth. Là nơi người dùng đăng nhập, kết nối repo, xem kết quả.
+2. **`packages/dashboard`** — dashboard Next.js 16. Cần PostgreSQL + Redis + GitHub OAuth. Là nơi người dùng đăng nhập, kết nối repo, xem kết quả.
 
 > Lệnh `npm run dev` ở thư mục gốc khởi động đồng thời cả 3 tiến trình: `analyzer` (watch build), `web` (Next.js) và `worker` (hàng đợi xử lý job của web).
 
@@ -105,7 +105,7 @@ node bin/run.js analyze --repo . --format json > findings.json
 
 ## 4. Project WEB — dashboard SaaS
 
-**Vị trí:** `packages/web/`
+**Vị trí:** `packages/dashboard/`
 **Bản chất:** Next.js 16.2.7 (App Router, Turbopack), React 19, TypeScript strict, Tailwind v4.
 **Phụ thuộc hạ tầng:** PostgreSQL (qua Prisma 7.8) + Redis (qua BullMQ/ioredis) + GitHub OAuth (Auth.js v5).
 
@@ -184,7 +184,7 @@ node bin/run.js analyze --repo . --format json > findings.json
 
 **Điểm tích hợp cốt lõi:**
 - `packages/analyzer` export hàm `analyze()` ở `src/index.ts`.
-- `packages/web/worker/processors/analysis.processor.ts` là nơi worker **gọi vào** `analyze()` đó.
+- `packages/dashboard/worker/processors/analysis.processor.ts` là nơi worker **gọi vào** `analyze()` đó.
 - Như vậy: **một bộ rule, hai con đường tiêu thụ** (Action trực tiếp vs. Worker của web).
 
 ### 5.1 A và B có chạy cùng lúc trên 1 PR không?
@@ -324,7 +324,7 @@ Quy trình: `npm install` (gốc) → analyzer `build`/`test` chạy độc lậ
 | `docs/usage.md` | Cách dùng CLI + cài GitHub Action |
 | `docs/configuration.md` | Toàn bộ trường cấu hình `.github/code-smell-detector.yml` |
 | `docs/rules/react/*.md` | Tài liệu chi tiết từng rule |
-| `packages/web/TONG-KET-IMPLEMENTATION.md` | Chi tiết kiến trúc web: màn hình, API, env, dịch vụ ngoài |
+| `packages/dashboard/TONG-KET-IMPLEMENTATION.md` | Chi tiết kiến trúc web: màn hình, API, env, dịch vụ ngoài |
 
 ---
 

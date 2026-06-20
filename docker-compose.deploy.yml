@@ -1,43 +1,23 @@
-# Deploy stack for the VPS — PULLS prebuilt images instead of building.
+# Deploy stack for the SHARED VPS — pulls prebuilt images, joins the existing
+# Traefik edge. Designed to be fully isolated from other projects on the host
+# (treklink-production, exe-be-prod): ships NO Traefik, publishes NO host ports,
+# project name `mergetrack-prod` prefixes all containers/networks/volumes.
 #
-# Build & push from your dev machine first:
-#   docker build --target runner -t $WEB_IMAGE    .
-#   docker build --target worker -t $WORKER_IMAGE .
-#   docker push $WEB_IMAGE && docker push $WORKER_IMAGE
+# Build & push from the dev machine first (see HUONG-DAN-DEPLOY / chat):
+#   docker build --target runner -t $REGISTRY/$IMAGE_NAMESPACE/web:$TAG    --platform linux/amd64 .
+#   docker build --target worker -t $REGISTRY/$IMAGE_NAMESPACE/worker:$TAG --platform linux/amd64 .
+#   docker push  $REGISTRY/$IMAGE_NAMESPACE/web:$TAG  &&  docker push $REGISTRY/$IMAGE_NAMESPACE/worker:$TAG
 #
-# Then on the VPS (no build toolchain / RAM needed):
+# On the VPS (in this project's OWN dir, e.g. /opt/app/mergetrack):
 #   docker compose -f docker-compose.deploy.yml --env-file .env.production pull
 #   docker compose -f docker-compose.deploy.yml --env-file .env.production up -d
 #
-# WEB_IMAGE / WORKER_IMAGE come from .env.production (see .env.production.example).
-# Identical topology to docker-compose.prod.yml; only build: → image:.
+# The edge Traefik (treklink-edge-traefik-1) owns :80/:443 and the `treklink-edge`
+# network; we only ATTACH to it (external) and add labels — never restart/modify it.
 
-name: csd-prod
+name: mergetrack-prod
 
 services:
-  traefik:
-    image: traefik:v3.3
-    restart: unless-stopped
-    command:
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      - --entrypoints.web.http.redirections.entryPoint.to=websecure
-      - --entrypoints.web.http.redirections.entryPoint.scheme=https
-      - --certificatesresolvers.le.acme.email=${ACME_EMAIL}
-      - --certificatesresolvers.le.acme.storage=/letsencrypt/acme.json
-      - --certificatesresolvers.le.acme.httpchallenge=true
-      - --certificatesresolvers.le.acme.httpchallenge.entrypoint=web
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./letsencrypt:/letsencrypt
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - edge
-
   postgres:
     image: postgres:17
     restart: unless-stopped
@@ -70,8 +50,8 @@ services:
 
   # One-shot: apply Prisma migrations, then exit. web/worker wait for success.
   migrate:
-    image: ${WORKER_IMAGE}
-    command: ["npm", "run", "db:deploy", "-w", "packages/web"]
+    image: ${REGISTRY}/${IMAGE_NAMESPACE}/worker:${IMAGE_TAG}
+    command: ["npm", "run", "db:deploy", "-w", "packages/dashboard"]
     environment:
       DATABASE_URL: ${DATABASE_URL}
     depends_on:
@@ -82,12 +62,13 @@ services:
     restart: "no"
 
   web:
-    image: ${WEB_IMAGE}
+    image: ${REGISTRY}/${IMAGE_NAMESPACE}/web:${IMAGE_TAG}
     restart: unless-stopped
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
       REDIS_URL: ${REDIS_URL}
+      # Auth.js v5 behind the shared Traefik proxy
       AUTH_URL: https://${DOMAIN}
       AUTH_TRUST_HOST: "true"
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
@@ -107,20 +88,41 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+    # Unique router/service names so they never collide with treklink-production-*.
     labels:
       - traefik.enable=true
-      - traefik.docker.network=csd-prod_edge
-      - traefik.http.routers.web.rule=Host(`${DOMAIN}`)
-      - traefik.http.routers.web.entrypoints=websecure
-      - traefik.http.routers.web.tls=true
-      - traefik.http.routers.web.tls.certresolver=le
-      - traefik.http.services.web.loadbalancer.server.port=3000
+      - traefik.docker.network=treklink-edge
+      - traefik.http.routers.mergetrack-dashboard.rule=Host(`${DOMAIN}`)
+      - traefik.http.routers.mergetrack-dashboard.entrypoints=websecure
+      - traefik.http.routers.mergetrack-dashboard.tls.certresolver=letsencrypt
+      - traefik.http.services.mergetrack-dashboard.loadbalancer.server.port=3000
     networks:
-      - edge
+      - treklink-edge
       - internal
 
+  # ── Landing site (marketing) at the apex ${LANDING_DOMAIN} (+ www).
+  #   NEXT_PUBLIC_* are inlined at BUILD time, so build & push from the dev machine:
+  #     docker build --target landing-runner --platform linux/amd64 \
+  #       --build-arg NEXT_PUBLIC_DASHBOARD_URL=https://app.mergetrack.site \
+  #       --build-arg NEXT_PUBLIC_SITE_URL=https://mergetrack.site \
+  #       -t $REGISTRY/$IMAGE_NAMESPACE/landing:$TAG .
+  #     docker push $REGISTRY/$IMAGE_NAMESPACE/landing:$TAG
+  #   Unique router name so it never collides with the dashboard's router.
+  landing:
+    image: ${REGISTRY}/${IMAGE_NAMESPACE}/landing:${IMAGE_TAG}
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=treklink-edge
+      - "traefik.http.routers.mergetrack-landing.rule=Host(`${LANDING_DOMAIN}`) || Host(`www.${LANDING_DOMAIN}`)"
+      - traefik.http.routers.mergetrack-landing.entrypoints=websecure
+      - traefik.http.routers.mergetrack-landing.tls.certresolver=letsencrypt
+      - traefik.http.services.mergetrack-landing.loadbalancer.server.port=3000
+    networks:
+      - treklink-edge
+
   worker:
-    image: ${WORKER_IMAGE}
+    image: ${REGISTRY}/${IMAGE_NAMESPACE}/worker:${IMAGE_TAG}
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -141,5 +143,8 @@ volumes:
   redisdata:
 
 networks:
-  edge:
+  # The shared edge — created & owned by the treklink stack. We only attach.
+  treklink-edge:
+    external: true
+  # Private to this project → becomes `mergetrack-prod_internal`.
   internal:

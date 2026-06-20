@@ -5,7 +5,15 @@
 /dist
 /tmp
 /node_modules
+**/node_modules
+**/.next
 oclif.manifest.json
+
+# Local env & secrets — never commit real env files; keep the *.example templates.
+.env
+.env.*
+!.env.example
+!.env.*.example
 
 
 
