@@ -65,11 +65,7 @@ export function ConnectRepoModal({ buttonLabel = "Connect repository" }: Connect
 
   if (!open) {
     return (
-      <button
-        onClick={() => { setOpen(true); fetchRepos(""); }}
-        className="inline-flex items-center gap-2 text-sm font-medium px-3 py-2 rounded-md text-white transition-colors"
-        style={{ backgroundColor: "var(--color-primary)", borderRadius: "var(--radius-card)" }}
-      >
+      <button onClick={() => { setOpen(true); fetchRepos(""); }} className="btn btn-primary">
         <Plus className="w-4 h-4" />
         {buttonLabel}
       </button>
@@ -190,22 +186,14 @@ export function ConnectRepoModal({ buttonLabel = "Connect repository" }: Connect
           className="flex items-center justify-end gap-3 px-5 py-4 border-t"
           style={{ borderColor: "var(--color-border)" }}
         >
-          <button
-            onClick={() => setOpen(false)}
-            className="text-sm px-3 py-2 rounded-md border transition-colors"
-            style={{
-              borderColor: "var(--color-border)",
-              color: "var(--color-text-secondary)",
-              borderRadius: "var(--radius-card)",
-            }}
-          >
+          <button onClick={() => setOpen(false)} className="btn btn-secondary btn-sm">
             Cancel
           </button>
           <button
             onClick={handleConnect}
             disabled={selected.length === 0 || connecting}
-            className="text-sm px-3 py-2 rounded-md text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: "var(--color-primary)", borderRadius: "var(--radius-card)" }}
+            className="btn btn-primary btn-sm"
+            style={selected.length === 0 || connecting ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
           >
             {connecting ? "Connecting…" : `Connect selected (${selected.length})`}
           </button>

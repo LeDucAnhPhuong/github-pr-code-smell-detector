@@ -31,7 +31,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <div className="flex items-center gap-3 mb-6">
           <div
             className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: "var(--color-primary)" }}
+            style={{ backgroundColor: "var(--accent)" }}
           >
             <Shield className="w-6 h-6 text-white" />
           </div>
@@ -84,11 +84,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             await signIn("github");
           }}
         >
-          <button
-            type="submit"
-            className="w-full flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium text-white transition-colors cursor-pointer"
-            style={{ backgroundColor: "var(--color-primary)" }}
-          >
+          <button type="submit" className="btn btn-primary" style={{ width: "100%", justifyContent: "center", height: 40 }}>
             <Github className="w-4 h-4" />
             Continue with GitHub
           </button>

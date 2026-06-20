@@ -3,6 +3,15 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { analysisQueue } from "@/lib/queue";
 import { checkQuota } from "@/lib/db/billing";
+import {
+  upsertInstallation,
+  deleteInstallation,
+  suspendInstallation,
+  findInstallation,
+  connectInstallationRepos,
+  disconnectInstallationRepos,
+  type InstallationRepo,
+} from "@/lib/db/installations";
 
 function verifySignature(payload: string, signature: string, secret: string): boolean {
   const hmac = createHmac("sha256", secret);
@@ -15,13 +24,72 @@ function verifySignature(payload: string, signature: string, secret: string): bo
   }
 }
 
+interface WebhookRepo {
+  id: number;
+  name: string;
+  full_name: string;
+  private?: boolean;
+}
+
+function mapWebhookRepos(repos: WebhookRepo[]): InstallationRepo[] {
+  return repos.map((r) => ({
+    githubId: r.id,
+    owner: r.full_name.split("/")[0],
+    name: r.name,
+    fullName: r.full_name,
+    isPrivate: r.private ?? false,
+  }));
+}
+
+async function handleInstallationEvent(event: string, payload: Record<string, unknown>) {
+  const action = payload.action as string;
+  const installation = payload.installation as {
+    id: number;
+    account?: { login?: string; type?: string };
+  };
+  const installationId = installation.id;
+  const accountLogin = installation.account?.login ?? "unknown";
+  const accountType = installation.account?.type ?? "User";
+
+  if (event === "installation") {
+    if (action === "deleted") {
+      await deleteInstallation(installationId);
+      return;
+    }
+    if (action === "suspend") {
+      await suspendInstallation(installationId);
+      return;
+    }
+    // created | unsuspend | new_permissions_accepted
+    await upsertInstallation({ installationId, accountLogin, accountType });
+    const existing = await findInstallation(installationId);
+    const repos = mapWebhookRepos((payload.repositories as WebhookRepo[]) ?? []);
+    if (existing?.userId && repos.length > 0) {
+      await connectInstallationRepos(existing.userId, installationId, repos);
+    }
+    return;
+  }
+
+  // installation_repositories: added | removed
+  await upsertInstallation({ installationId, accountLogin, accountType });
+  const existing = await findInstallation(installationId);
+  const added = mapWebhookRepos((payload.repositories_added as WebhookRepo[]) ?? []);
+  const removed = (payload.repositories_removed as WebhookRepo[]) ?? [];
+  if (existing?.userId && added.length > 0) {
+    await connectInstallationRepos(existing.userId, installationId, added);
+  }
+  if (removed.length > 0) {
+    await disconnectInstallationRepos(installationId, removed.map((r) => r.full_name));
+  }
+}
+
 export async function POST(req: Request) {
   const rawBody = await req.text();
   const signature = req.headers.get("x-hub-signature-256") ?? "";
   const event = req.headers.get("x-github-event") ?? "";
 
-  // Verify webhook signature
-  const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET ?? "";
+  // Verify webhook signature (GitHub App webhook secret; falls back to legacy name)
+  const webhookSecret = process.env.GITHUB_APP_WEBHOOK_SECRET ?? process.env.GITHUB_WEBHOOK_SECRET ?? "";
   if (!webhookSecret || !verifySignature(rawBody, signature, webhookSecret)) {
     return NextResponse.json(
       { error: { code: "UNAUTHORIZED", message: "Invalid webhook signature" } },
@@ -29,8 +97,8 @@ export async function POST(req: Request) {
     );
   }
 
-  // Only handle pull_request events
-  if (event !== "pull_request") {
+  // Handle pull_request + installation lifecycle events
+  if (event !== "pull_request" && event !== "installation" && event !== "installation_repositories") {
     return NextResponse.json({ data: { ignored: true } }, { status: 200 });
   }
 
@@ -39,6 +107,11 @@ export async function POST(req: Request) {
     payload = JSON.parse(rawBody);
   } catch {
     return NextResponse.json({ error: { code: "BAD_REQUEST", message: "Invalid JSON" } }, { status: 400 });
+  }
+
+  if (event === "installation" || event === "installation_repositories") {
+    await handleInstallationEvent(event, payload);
+    return NextResponse.json({ data: { ok: true } }, { status: 200 });
   }
 
   const action = payload.action as string;
@@ -54,9 +127,9 @@ export async function POST(req: Request) {
   const prNumber = pr.number as number;
   const commitSha = (pr.head as { sha: string }).sha;
 
-  // Find repository in DB
+  // Find repository in DB (prefer matching the installation that sent the event)
   const dbRepo = await prisma.repository.findFirst({
-    where: { fullName },
+    where: { fullName, ...(installation ? { installationId: installation.id } : {}) },
     include: { user: true },
   });
 

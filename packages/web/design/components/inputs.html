@@ -1,0 +1,69 @@
+<!-- @dsCard group="Components" name="Inputs" subtitle="Text · select · switch · checkbox · focus + error" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Inputs</title>
+  <link rel="stylesheet" href="../tokens.css" />
+</head>
+<body>
+  <div class="page" style="max-width:460px">
+    <div class="card card-body stack">
+      <div>
+        <label class="field-label">Repository</label>
+        <input class="input" value="acme/payments-api" />
+        <p class="field-help">The full owner/repo slug from GitHub.</p>
+      </div>
+
+      <div>
+        <label class="field-label">Default branch</label>
+        <div style="position:relative">
+          <select class="select" style="appearance:none">
+            <option>main</option><option>develop</option>
+          </select>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" stroke-width="2" style="position:absolute;right:11px;top:50%;transform:translateY(-50%);pointer-events:none"><path d="M6 9l6 6 6-6"/></svg>
+        </div>
+      </div>
+
+      <div>
+        <label class="field-label">Focus state</label>
+        <input class="input" placeholder="src/**/*.ts" style="border-color:var(--link);box-shadow:var(--focus-ring)" />
+      </div>
+
+      <div>
+        <label class="field-label" style="color:var(--sev-high-ink)">Webhook secret</label>
+        <input class="input" value="" style="border-color:var(--sev-high-bd)" />
+        <p class="field-help" style="color:var(--sev-high-ink)">This field is required.</p>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="between">
+        <div>
+          <div class="field-label" style="margin-bottom:2px">Auto-analyze new PRs</div>
+          <div class="field-help" style="margin-top:0">Run on every opened pull request.</div>
+        </div>
+        <div class="switch"></div>
+      </div>
+
+      <div class="between">
+        <div>
+          <div class="field-label" style="margin-bottom:2px">Comment on PR</div>
+          <div class="field-help" style="margin-top:0">Post findings as a review comment.</div>
+        </div>
+        <div class="switch off"></div>
+      </div>
+
+      <div class="row">
+        <span class="check"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>
+        <span style="font-size:13px">Block merge on High severity findings</span>
+      </div>
+      <div class="row">
+        <span class="check empty"></span>
+        <span style="font-size:13px" class="secondary">Include Low severity in PR comment</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

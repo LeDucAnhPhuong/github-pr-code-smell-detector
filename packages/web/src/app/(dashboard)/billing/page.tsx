@@ -18,7 +18,7 @@ export default async function BillingPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-6" style={{ color: "var(--color-text-primary)" }}>Billing</h1>
+      <h1 className="h1" style={{ marginBottom: 20 }}>Billing</h1>
 
       {/* Quota warning */}
       {isOverQuota && (
@@ -59,11 +59,7 @@ export default async function BillingPage() {
             </span>
           </div>
           <div className="flex gap-2">
-            <Link
-              href="/billing/plans"
-              className="text-sm px-3 py-2 rounded-md text-white"
-              style={{ backgroundColor: "var(--color-primary)", borderRadius: "var(--radius-card)" }}
-            >
+            <Link href="/billing/plans" className="btn btn-primary btn-sm">
               Change plan
             </Link>
           </div>
@@ -81,7 +77,7 @@ export default async function BillingPage() {
                 className="h-full rounded-full"
                 style={{
                   width: `${Math.min(quotaPercent, 100)}%`,
-                  backgroundColor: isOverQuota ? "var(--color-danger)" : "var(--color-primary)",
+                  backgroundColor: isOverQuota ? "var(--color-danger)" : "var(--accent)",
                 }}
               />
             </div>
@@ -94,7 +90,7 @@ export default async function BillingPage() {
             <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-surface-muted)" }}>
               <div
                 className="h-full rounded-full"
-                style={{ width: `${Math.min(Math.round((repoUsed / repoLimit) * 100), 100)}%`, backgroundColor: "var(--color-primary)" }}
+                style={{ width: `${Math.min(Math.round((repoUsed / repoLimit) * 100), 100)}%`, backgroundColor: "var(--accent)" }}
               />
             </div>
           </div>
@@ -136,12 +132,7 @@ export default async function BillingPage() {
           { href: "/billing/subscription", label: "Subscription details" },
           { href: "/billing/usage", label: "Usage history" },
         ].map(({ href, label }) => (
-          <Link
-            key={href}
-            href={href}
-            className="text-sm px-3 py-2 rounded-md border"
-            style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)", borderRadius: "var(--radius-card)" }}
-          >
+          <Link key={href} href={href} className="btn btn-secondary btn-sm">
             {label}
           </Link>
         ))}

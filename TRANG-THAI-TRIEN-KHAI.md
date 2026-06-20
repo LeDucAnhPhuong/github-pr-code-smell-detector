@@ -5,6 +5,26 @@
 
 ---
 
+> ## ⚠️ CẬP NHẬT 2026-06-19 — File này đã LỖI THỜI ở phần Web
+>
+> Phần "Epic 5–8 — Web Dashboard ⏳ CHƯA TRIỂN KHAI" bên dưới **không còn đúng**.
+> Thực tế `packages/web/` **đã được triển khai đầy đủ** (Next.js 16, 26 màn hình,
+> 13 API route, 14 Prisma model, worker BullMQ) và **đã chạy được local end-to-end**.
+>
+> **Trạng thái hiện tại (đã verify):**
+> - Analyzer: `npm run build` ✅, `npm test` ✅ **70 test pass**, lệnh `analyze` chạy thật ✅
+> - Web: `docker compose up` (Postgres+Redis) → `db:migrate` + `db:seed` → `npm run dev`
+>   phục vụ `/login` (HTTP 200) và redirect auth ✅; `npm run worker` kết nối Redis ✅
+>
+> 👉 Xem **[HUONG-DAN-CHAY-LOCAL.md](./HUONG-DAN-CHAY-LOCAL.md)** để chạy cả 2 từ đầu,
+> và `packages/web/TONG-KET-IMPLEMENTATION.md` để biết chi tiết web.
+>
+> Các lỗi đã sửa khi verify: node_modules cài lại; 4 lỗi TS ở `mixed-responsibility.ts`;
+> `.env` không được Prisma 7 nạp; `seed.ts` thiếu adapter; middleware Edge → `proxy.ts`
+> (Node runtime); parse `REDIS_URL` sai (port NaN).
+
+---
+
 ## Tổng Quan Cấu Trúc Monorepo
 
 ```

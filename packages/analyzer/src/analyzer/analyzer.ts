@@ -1,10 +1,9 @@
-import { readFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-
 import type { AnalyzerConfig } from '../config/schema.js'
 import type { Diagnostic, Finding, Logger } from '../core/index.js'
 import type { ChangedFileProvider } from '../file-selection/changed-file-provider.js'
+import type { ContentProvider } from '../file-selection/content-provider.js'
 
+import { FsContentProvider } from '../file-selection/fs-content-provider.js'
 import { filterTargetFiles } from '../file-selection/target-filter.js'
 import { ALL_RULES } from '../rules/registry.js'
 import { parseFile } from './parser.js'
@@ -13,6 +12,8 @@ import { runRule, sortFindings } from './rule-runner.js'
 export interface AnalyzerOptions {
   changedFileProvider: ChangedFileProvider
   config: AnalyzerConfig
+  /** Source of file contents. Defaults to reading from disk under `repoPath`. */
+  contentProvider?: ContentProvider
   logger: Logger
   repoPath: string
 }
@@ -26,6 +27,7 @@ export interface AnalyzerResult {
 
 export async function analyze(options: AnalyzerOptions): Promise<AnalyzerResult> {
   const { changedFileProvider, config, logger, repoPath } = options
+  const contentProvider = options.contentProvider ?? new FsContentProvider(repoPath)
 
   // 1. Get changed files
   let changedFiles: string[]
@@ -58,12 +60,9 @@ export async function analyze(options: AnalyzerOptions): Promise<AnalyzerResult>
 
   // 4. Parse and run rules per file
   for (const relPath of included) {
-    const absPath = resolve(join(repoPath, relPath))
-
-    let source: string
-    try {
-      source = readFileSync(absPath, 'utf8')
-    } catch {
+    // eslint-disable-next-line no-await-in-loop
+    const source = await contentProvider.read(relPath)
+    if (source === null) {
       allDiagnostics.push({
         code: 'FILE_READ_ERROR',
         file: relPath,

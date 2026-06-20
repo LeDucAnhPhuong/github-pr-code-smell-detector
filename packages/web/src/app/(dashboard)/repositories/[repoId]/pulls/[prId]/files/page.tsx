@@ -4,6 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 
+const FILE_STATUS_DOT: Record<string, string> = {
+  ANALYZED: "var(--ok-dot)",
+  DIAGNOSTIC: "var(--fail-dot)",
+  SKIPPED: "var(--idle-dot)",
+};
+
 export default async function ChangedFilesPage({ params }: { params: Promise<{ repoId: string; prId: string }> }) {
   const session = await auth();
   const { repoId, prId } = await params;
@@ -25,58 +31,67 @@ export default async function ChangedFilesPage({ params }: { params: Promise<{ r
   const diagnostics = files.filter((f) => f.status === "DIAGNOSTIC").length;
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <Breadcrumb items={[
-        { label: "Repositories", href: "/repositories" },
-        { label: repo.fullName, href: `/repositories/${repoId}` },
-        { label: `#${pr.prNumber}`, href: `/repositories/${repoId}/pulls/${prId}` },
-        { label: "Changed Files" },
-      ]} />
-      <h1 className="text-2xl font-semibold mb-4" style={{ color: "var(--color-text-primary)" }}>Changed Files</h1>
+    <div className="page-w">
+      <Breadcrumb
+        items={[
+          { label: "Repositories", href: "/repositories" },
+          { label: repo.fullName, href: `/repositories/${repoId}` },
+          { label: `#${pr.prNumber}`, href: `/repositories/${repoId}/pulls/${prId}` },
+          { label: "Changed Files" },
+        ]}
+      />
+      <h1 className="h1" style={{ marginBottom: 12 }}>
+        Changed files
+      </h1>
 
-      {/* Summary */}
-      <div className="flex items-center gap-6 mb-4 text-sm">
-        <span style={{ color: "var(--color-text-secondary)" }}>{files.length} changed files</span>
-        <span style={{ color: "var(--color-success)" }}>{analyzed} analyzed</span>
-        <span style={{ color: "var(--color-text-muted)" }}>{skipped} skipped</span>
-        {diagnostics > 0 && <span style={{ color: "var(--color-danger)" }}>{diagnostics} parser diagnostic{diagnostics !== 1 ? "s" : ""}</span>}
+      <div className="row" style={{ gap: 18, marginBottom: 16, fontSize: 12.5 }}>
+        <span className="secondary">{files.length} changed files</span>
+        <span className="status">
+          <span className="dot" style={{ background: "var(--ok-dot)" }} />
+          {analyzed} analyzed
+        </span>
+        <span className="muted">{skipped} skipped</span>
+        {diagnostics > 0 && (
+          <span className="status">
+            <span className="dot" style={{ background: "var(--fail-dot)" }} />
+            {diagnostics} parser diagnostic{diagnostics !== 1 ? "s" : ""}
+          </span>
+        )}
       </div>
 
-      <div className="rounded-lg border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}>
+      <div className="card" style={{ overflow: "hidden" }}>
         {files.length === 0 ? (
-          <div className="p-8 text-center text-sm" style={{ color: "var(--color-text-muted)" }}>No file data available.</div>
+          <div style={{ padding: 32, textAlign: "center", fontSize: 13, color: "var(--ink-3)" }}>No file data available.</div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="table">
             <thead>
-              <tr style={{ borderBottom: `1px solid var(--color-border)`, backgroundColor: "var(--color-surface-muted)" }}>
-                {["File", "Type", "Status", "+", "−", "Findings", "Parser"].map((h) => (
-                  <th key={h} className="text-left px-4 py-2 text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>{h}</th>
-                ))}
+              <tr>
+                <th>File</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>+</th>
+                <th>−</th>
+                <th>Findings</th>
+                <th>Parser</th>
               </tr>
             </thead>
             <tbody>
               {files.map((f) => (
-                <tr key={f.id} className="border-b last:border-0" style={{ borderColor: "var(--color-border)" }}>
-                  <td className="px-4 py-2.5 font-mono text-xs" style={{ color: "var(--color-primary)" }}>
-                    {f.filePath.split("/").slice(-2).join("/")}
+                <tr key={f.id}>
+                  <td>
+                    <span className="code">{f.filePath.split("/").slice(-2).join("/")}</span>
                   </td>
-                  <td className="px-4 py-2.5 text-xs" style={{ color: "var(--color-text-secondary)" }}>{f.fileType ?? "—"}</td>
-                  <td className="px-4 py-2.5">
-                    <span
-                      className="text-xs px-2 py-0.5 rounded font-medium"
-                      style={{
-                        backgroundColor: f.status === "ANALYZED" ? "#e6f4ea" : f.status === "DIAGNOSTIC" ? "#ffebe9" : "#f0f3f6",
-                        color: f.status === "ANALYZED" ? "#1a7f37" : f.status === "DIAGNOSTIC" ? "#cf222e" : "#57606a",
-                        borderRadius: "var(--radius-badge)",
-                      }}
-                    >
+                  <td className="secondary">{f.fileType ?? "—"}</td>
+                  <td>
+                    <span className="status">
+                      <span className="dot" style={{ background: FILE_STATUS_DOT[f.status] ?? "var(--idle-dot)" }} />
                       {f.status.charAt(0) + f.status.slice(1).toLowerCase()}
                     </span>
                   </td>
-                  <td className="px-4 py-2.5 text-xs" style={{ color: "var(--color-success)" }}>+{f.additions}</td>
-                  <td className="px-4 py-2.5 text-xs" style={{ color: "var(--color-danger)" }}>-{f.deletions}</td>
-                  <td className="px-4 py-2.5 text-xs" style={{ color: "var(--color-text-secondary)" }}>{f.findingsCount > 0 ? f.findingsCount : "—"}</td>
-                  <td className="px-4 py-2.5 text-xs" style={{ color: f.parserResult === "OK" ? "var(--color-success)" : "var(--color-danger)" }}>
+                  <td style={{ color: "var(--ok-ink)" }}>+{f.additions}</td>
+                  <td style={{ color: "var(--sev-high-ink)" }}>-{f.deletions}</td>
+                  <td className="secondary">{f.findingsCount > 0 ? f.findingsCount : "—"}</td>
+                  <td style={{ color: f.parserResult === "OK" ? "var(--ok-ink)" : "var(--sev-high-ink)" }}>
                     {f.parserResult ?? "—"}
                   </td>
                 </tr>

@@ -1,0 +1,131 @@
+<!-- @dsCard group="Components" name="Data table (TanStack)" subtitle="Search · faceted filter chips + popover · sort · view · pagination" viewport="1100x680" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data table</title>
+  <link rel="stylesheet" href="../tokens.css" />
+</head>
+<body>
+  <div class="page">
+    <p class="eyebrow" style="margin:0 0 10px">Findings table — toolbar + facets act client-side on fetched rows (see data-contract.md)</p>
+
+    <div class="card" style="overflow:visible">
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="tsearch">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input class="input" placeholder="Search file or rule…" value="auth" />
+        </div>
+
+        <!-- Active facet chip -->
+        <span class="chip"><span class="muted">Severity</span><b>High, Medium</b><span class="x">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </span></span>
+
+        <!-- Add-filter buttons -->
+        <button class="filter-btn">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Category
+        </button>
+        <button class="filter-btn">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Status
+        </button>
+
+        <div class="spacer"></div>
+        <button class="filter-btn" style="border-style:solid">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M7 12h10M11 18h2"/></svg>
+          View
+        </button>
+      </div>
+
+      <!-- Faceted-filter popover (shown open as an example) -->
+      <div style="position:relative">
+        <div class="menu" style="position:absolute;top:6px;left:300px;width:200px;z-index:5">
+          <div class="muted" style="font-size:11px;padding:4px 8px">Filter severity</div>
+          <div class="menu-item"><span class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>High <span class="muted" style="margin-left:auto">2</span></div>
+          <div class="menu-item"><span class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg></span>Medium <span class="muted" style="margin-left:auto">4</span></div>
+          <div class="menu-item"><span class="check empty"></span>Low <span class="muted" style="margin-left:auto">2</span></div>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div style="overflow:auto">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th class="sortable asc"><span class="sort">Rule <svg class="arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></th>
+              <th>Category</th>
+              <th class="sortable"><span class="sort">File <svg class="arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></th>
+              <th>Line</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge sev-high">High</span></td>
+              <td class="cell-strong mono" style="font-size:12px">react/no-array-index-key</td>
+              <td class="secondary">Correctness</td>
+              <td><span class="code">src/components/UserList.tsx</span></td>
+              <td class="muted">42</td>
+              <td><span class="status"><span class="dot" style="background:var(--run-dot)"></span>Open</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge sev-high">High</span></td>
+              <td class="cell-strong mono" style="font-size:12px">react/exhaustive-deps</td>
+              <td class="secondary">Correctness</td>
+              <td><span class="code">src/hooks/useAuth.ts</span></td>
+              <td class="muted">19</td>
+              <td><span class="status"><span class="dot" style="background:var(--run-dot)"></span>Open</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge sev-med">Medium</span></td>
+              <td class="cell-strong mono" style="font-size:12px">complexity/function-length</td>
+              <td class="secondary">Maintainability</td>
+              <td><span class="code">src/middleware/auth.ts</span></td>
+              <td class="muted">88</td>
+              <td><span class="status"><span class="dot" style="background:var(--ok-dot)"></span>Reviewed</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge sev-med">Medium</span></td>
+              <td class="cell-strong mono" style="font-size:12px">complexity/deep-nesting</td>
+              <td class="secondary">Maintainability</td>
+              <td><span class="code">src/middleware/auth.ts</span></td>
+              <td class="muted">102</td>
+              <td><span class="status"><span class="dot" style="background:var(--run-dot)"></span>Open</span></td>
+            </tr>
+            <tr>
+              <td><span class="badge sev-low">Low</span></td>
+              <td class="cell-strong mono" style="font-size:12px">style/prefer-const</td>
+              <td class="secondary">Style</td>
+              <td><span class="code">src/middleware/auth.ts</span></td>
+              <td class="muted">12</td>
+              <td><span class="status"><span class="dot" style="background:var(--idle-dot)"></span>Ignored</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer / pagination -->
+      <div class="table-foot">
+        <span>8 of 8 row(s)</span>
+        <div class="row" style="gap:14px">
+          <span>Rows per page
+            <select class="select" style="display:inline-flex;width:auto;height:26px;padding:0 24px 0 8px;margin-left:6px;font-size:12px">
+              <option>10</option><option>25</option><option>50</option>
+            </select>
+          </span>
+          <span>Page 1 of 1</span>
+          <div class="pager">
+            <button class="pg" disabled><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+            <button class="pg" disabled><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

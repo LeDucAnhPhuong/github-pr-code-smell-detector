@@ -1,6 +1,9 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
+// Next.js 16 renamed "middleware" to "proxy". Unlike the old Edge-only
+// middleware, proxy runs in the Node.js runtime by default, which lets Auth.js
+// use the Prisma (pg) adapter with database sessions here.
 export default auth((req) => {
   const { nextUrl, auth: session } = req;
   const isLoggedIn = !!session?.user;

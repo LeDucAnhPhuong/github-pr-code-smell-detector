@@ -4,36 +4,37 @@ export default async function AdminFrameworksPage() {
   const frameworks = await getFrameworks();
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-6" style={{ color: "var(--color-text-primary)" }}>Framework Catalog</h1>
-      <div className="rounded-lg border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}>
-        <table className="w-full text-sm">
+    <div className="page-w">
+      <h1 className="h1" style={{ marginBottom: 20 }}>
+        Framework catalog
+      </h1>
+      <div className="card" style={{ overflow: "hidden" }}>
+        <table className="table">
           <thead>
-            <tr style={{ borderBottom: `1px solid var(--color-border)`, backgroundColor: "var(--color-surface-muted)" }}>
-              {["Framework", "Extensions", "Active Rules", "Status"].map((h) => (
-                <th key={h} className="text-left px-4 py-2 text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>{h}</th>
-              ))}
+            <tr>
+              <th>Framework</th>
+              <th>Extensions</th>
+              <th>Active rules</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {frameworks.map((fw) => (
-              <tr key={fw.id} className="border-b last:border-0" style={{ borderColor: "var(--color-border)" }}>
-                <td className="px-4 py-3 font-medium text-sm" style={{ color: "var(--color-text-primary)" }}>{fw.name}</td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1">
+              <tr key={fw.id}>
+                <td className="cell-strong">{fw.name}</td>
+                <td>
+                  <div className="row" style={{ gap: 4 }}>
                     {fw.supportedExtensions.map((ext) => (
-                      <span key={ext} className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--color-surface-muted)", color: "var(--color-text-secondary)" }}>
+                      <span key={ext} className="code">
                         {ext}
                       </span>
                     ))}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-xs" style={{ color: "var(--color-text-secondary)" }}>{fw._count.rules}</td>
-                <td className="px-4 py-3">
-                  <span
-                    className="text-xs px-2 py-0.5 rounded font-medium"
-                    style={{ backgroundColor: fw.isActive ? "#e6f4ea" : "#f0f3f6", color: fw.isActive ? "#1a7f37" : "#57606a", borderRadius: "var(--radius-badge)" }}
-                  >
+                <td className="secondary">{fw._count.rules}</td>
+                <td>
+                  <span className="status">
+                    <span className="dot" style={{ background: fw.isActive ? "var(--ok-dot)" : "var(--idle-dot)" }} />
                     {fw.isActive ? "Active" : "Inactive"}
                   </span>
                 </td>

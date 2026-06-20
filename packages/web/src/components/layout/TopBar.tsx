@@ -14,42 +14,27 @@ interface TopBarProps {
 
 export function TopBar({ user }: TopBarProps) {
   return (
-    <header
-      className="flex items-center justify-between px-4 border-b shrink-0"
-      style={{
-        height: "var(--topbar-height)",
-        backgroundColor: "var(--color-surface)",
-        borderColor: "var(--color-border)",
-      }}
-    >
+    <header className="topbar">
       {/* GitHub connection status */}
-      <div className="flex items-center gap-2 text-xs" style={{ color: "var(--color-text-muted)" }}>
+      <div className="status">
         <Github className="w-3.5 h-3.5" />
         <span>Connected</span>
-        <span
-          className="w-1.5 h-1.5 rounded-full inline-block"
-          style={{ backgroundColor: "var(--color-success)" }}
-        />
+        <span className="dot" style={{ background: "var(--ok-dot)" }} />
       </div>
 
       {/* User info */}
-      <div className="flex items-center gap-3">
-        <span className="text-sm" style={{ color: "var(--color-text-secondary)" }}>
+      <div className="row" style={{ gap: 12 }}>
+        <span className="secondary" style={{ fontSize: 12.5 }}>
           {user.name ?? user.email}
         </span>
-        {user.image && (
-          <Image
-            src={user.image}
-            alt={user.name ?? "avatar"}
-            width={28}
-            height={28}
-            className="rounded-full"
-          />
+        {user.image ? (
+          <Image src={user.image} alt={user.name ?? "avatar"} width={26} height={26} className="avatar" />
+        ) : (
+          <span className="avatar">{(user.name ?? user.email ?? "U").slice(0, 2).toUpperCase()}</span>
         )}
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex items-center gap-1.5 text-xs rounded-md px-2 py-1.5 transition-colors"
-          style={{ color: "var(--color-text-muted)" }}
+          className="btn btn-ghost btn-sm"
           title="Sign out"
         >
           <LogOut className="w-3.5 h-3.5" />

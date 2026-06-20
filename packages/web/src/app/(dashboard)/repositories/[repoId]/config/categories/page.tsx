@@ -13,41 +13,44 @@ export default async function CategorySettingsPage({ params }: { params: Promise
   const categories = await getCategories();
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <Breadcrumb items={[
-        { label: "Repositories", href: "/repositories" },
-        { label: repo.fullName, href: `/repositories/${repoId}` },
-        { label: "Configuration", href: `/repositories/${repoId}/config` },
-        { label: "Categories" },
-      ]} />
-      <h1 className="text-2xl font-semibold mb-4" style={{ color: "var(--color-text-primary)" }}>Category Settings</h1>
-      <div className="rounded-lg border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}>
-        <table className="w-full text-sm">
+    <div className="page-w">
+      <Breadcrumb
+        items={[
+          { label: "Repositories", href: "/repositories" },
+          { label: repo.fullName, href: `/repositories/${repoId}` },
+          { label: "Configuration", href: `/repositories/${repoId}/config` },
+          { label: "Categories" },
+        ]}
+      />
+      <h1 className="h1" style={{ marginBottom: 12 }}>
+        Category settings
+      </h1>
+      <div className="card" style={{ overflow: "hidden" }}>
+        <table className="table">
           <thead>
-            <tr style={{ borderBottom: `1px solid var(--color-border)`, backgroundColor: "var(--color-surface-muted)" }}>
-              {["Category", "Description", "Rules", "Default Severity", "Status"].map((h) => (
-                <th key={h} className="text-left px-4 py-2 text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>{h}</th>
-              ))}
+            <tr>
+              <th>Category</th>
+              <th>Description</th>
+              <th>Rules</th>
+              <th>Default severity</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {categories.map((cat) => (
-              <tr key={cat.id} className="border-b last:border-0" style={{ borderColor: "var(--color-border)" }}>
-                <td className="px-4 py-3 font-medium text-sm" style={{ color: "var(--color-text-primary)" }}>{cat.name}</td>
-                <td className="px-4 py-3 text-xs max-w-xs" style={{ color: "var(--color-text-secondary)" }}>
-                  {(cat.description ?? "").slice(0, 60)}{(cat.description ?? "").length > 60 ? "…" : ""}
+              <tr key={cat.id}>
+                <td className="cell-strong">{cat.name}</td>
+                <td className="secondary">
+                  {(cat.description ?? "").slice(0, 60)}
+                  {(cat.description ?? "").length > 60 ? "…" : ""}
                 </td>
-                <td className="px-4 py-3 text-xs" style={{ color: "var(--color-text-secondary)" }}>{cat._count.rules}</td>
-                <td className="px-4 py-3"><SeverityBadge severity={cat.defaultSeverity} /></td>
-                <td className="px-4 py-3">
-                  <span
-                    className="text-xs px-2 py-0.5 rounded font-medium"
-                    style={{
-                      backgroundColor: cat.isActive ? "#e6f4ea" : "#f0f3f6",
-                      color: cat.isActive ? "#1a7f37" : "#57606a",
-                      borderRadius: "var(--radius-badge)",
-                    }}
-                  >
+                <td className="secondary">{cat._count.rules}</td>
+                <td>
+                  <SeverityBadge severity={cat.defaultSeverity} />
+                </td>
+                <td>
+                  <span className="status">
+                    <span className="dot" style={{ background: cat.isActive ? "var(--ok-dot)" : "var(--idle-dot)" }} />
                     {cat.isActive ? "Active" : "Inactive"}
                   </span>
                 </td>

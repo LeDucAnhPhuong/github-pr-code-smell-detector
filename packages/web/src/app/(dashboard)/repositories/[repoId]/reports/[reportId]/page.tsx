@@ -3,6 +3,7 @@ import { getReport } from "@/lib/db/reports";
 import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { SeverityBadge } from "@/components/findings/SeverityBadge";
+import { CopyButton } from "@/components/reports/CopyButton";
 
 export default async function ReportDetailPage({ params }: { params: Promise<{ repoId: string; reportId: string }> }) {
   const session = await auth();
@@ -17,71 +18,82 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ r
   const lowCount = report.prAnalysis.findings.filter((f) => f.severity === "info").length;
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <Breadcrumb items={[
-        { label: "Repositories", href: "/repositories" },
-        { label: repo.fullName, href: `/repositories/${repoId}` },
-        { label: "Reports", href: `/repositories/${repoId}/reports` },
-        { label: report.id.slice(0, 8).toUpperCase() },
-      ]} />
+    <div className="page-w">
+      <Breadcrumb
+        items={[
+          { label: "Repositories", href: "/repositories" },
+          { label: repo.fullName, href: `/repositories/${repoId}` },
+          { label: "Reports", href: `/repositories/${repoId}/reports` },
+          { label: report.id.slice(0, 8).toUpperCase() },
+        ]}
+      />
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid-2-1">
         {/* Markdown preview */}
-        <div
-          className="col-span-2 rounded-lg border p-5"
-          style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>Report Preview</h2>
-            <button
-              onClick={() => navigator.clipboard.writeText(report.content)}
-              className="text-xs px-3 py-1.5 rounded-md border"
-              style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)", borderRadius: "var(--radius-card)" }}
-            >
-              Copy Markdown
-            </button>
+        <div className="card">
+          <div className="card-head">
+            <h2 className="h2">Report preview</h2>
+            <CopyButton text={report.content} />
           </div>
-          <pre
-            className="text-xs p-4 rounded-md overflow-auto whitespace-pre-wrap"
-            style={{ backgroundColor: "var(--color-code-bg)", color: "var(--color-text-primary)", fontFamily: "var(--font-mono)", border: `1px solid var(--color-border)`, minHeight: "300px" }}
-          >
-            {report.content || "# Code Smell Report\n\nNo findings detected in this analysis run."}
-          </pre>
+          <div className="card-body">
+            <pre
+              className="mono"
+              style={{
+                fontSize: 12,
+                padding: 14,
+                borderRadius: "var(--r)",
+                background: "var(--code-bg)",
+                color: "var(--ink)",
+                border: "1px solid var(--border)",
+                minHeight: 300,
+                overflow: "auto",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {report.content || "# Code Smell Report\n\nNo findings detected in this analysis run."}
+            </pre>
+          </div>
         </div>
 
         {/* Metadata */}
-        <div
-          className="rounded-lg border p-4"
-          style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}
-        >
-          <h2 className="text-sm font-semibold mb-4" style={{ color: "var(--color-text-primary)" }}>Metadata</h2>
-          <dl className="space-y-3 text-xs">
-            {[
-              ["Pull Request", `#${pr.prNumber} ${pr.title.slice(0, 30)}`],
-              ["Commit SHA", pr.commitSha.slice(0, 8)],
-              ["Status", report.status],
-              ["Created", new Date(report.createdAt).toLocaleString()],
-            ].map(([label, value]) => (
-              <div key={String(label)}>
-                <dt className="font-medium" style={{ color: "var(--color-text-muted)" }}>{label}</dt>
-                <dd className="mt-0.5" style={{ color: "var(--color-text-primary)" }}>{value}</dd>
-              </div>
-            ))}
-          </dl>
-          <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--color-border)" }}>
-            <h3 className="text-xs font-semibold mb-2" style={{ color: "var(--color-text-muted)" }}>Findings by severity</h3>
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
+        <div className="card">
+          <div className="card-head">
+            <h2 className="h2">Metadata</h2>
+          </div>
+          <div className="card-body">
+            <dl className="stack" style={{ fontSize: 12 }}>
+              {(
+                [
+                  ["Pull request", `#${pr.prNumber} ${pr.title.slice(0, 30)}`],
+                  ["Commit SHA", pr.commitSha.slice(0, 8)],
+                  ["Status", report.status],
+                  ["Created", new Date(report.createdAt).toLocaleString()],
+                ] as [string, string][]
+              ).map(([label, value]) => (
+                <div key={label}>
+                  <dt className="muted" style={{ fontWeight: 500 }}>
+                    {label}
+                  </dt>
+                  <dd style={{ marginTop: 2, marginLeft: 0 }}>{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <hr className="divider" style={{ margin: "14px 0" }} />
+            <p className="eyebrow" style={{ marginBottom: 8 }}>
+              Findings by severity
+            </p>
+            <div className="stack" style={{ gap: 6 }}>
+              <div className="between">
                 <SeverityBadge severity="error" />
-                <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>{highCount}</span>
+                <span className="secondary">{highCount}</span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="between">
                 <SeverityBadge severity="warning" />
-                <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>{mediumCount}</span>
+                <span className="secondary">{mediumCount}</span>
               </div>
-              <div className="flex items-center justify-between">
+              <div className="between">
                 <SeverityBadge severity="info" />
-                <span className="text-xs" style={{ color: "var(--color-text-secondary)" }}>{lowCount}</span>
+                <span className="secondary">{lowCount}</span>
               </div>
             </div>
           </div>

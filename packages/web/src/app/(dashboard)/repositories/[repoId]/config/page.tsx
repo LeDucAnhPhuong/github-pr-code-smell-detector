@@ -13,19 +13,17 @@ export default async function RepoConfigPage({ params }: { params: Promise<{ rep
   const config = (repo.config as Record<string, unknown>) ?? {};
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="page-w">
       <Breadcrumb items={[
         { label: "Repositories", href: "/repositories" },
         { label: repo.fullName, href: `/repositories/${repoId}` },
         { label: "Configuration" },
       ]} />
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-semibold" style={{ color: "var(--color-text-primary)" }}>Repository Configuration</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--color-text-secondary)" }}>
-            Configure rule thresholds, severity, and analysis scope for {repo.fullName}.
-          </p>
-        </div>
+      <div style={{ marginBottom: 18 }}>
+        <h1 className="h1">Repository configuration</h1>
+        <p className="secondary" style={{ marginTop: 4, fontSize: 13 }}>
+          Configure rule thresholds, severity, and analysis scope for {repo.fullName}.
+        </p>
       </div>
       <RepoConfigForm repoId={repoId} initialConfig={config} />
     </div>

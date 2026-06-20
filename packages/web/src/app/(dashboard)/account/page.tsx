@@ -24,7 +24,7 @@ export default async function AccountPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-6" style={{ color: "var(--color-text-primary)" }}>Account</h1>
+      <h1 className="h1" style={{ marginBottom: 20 }}>Account</h1>
 
       {isTokenExpired && (
         <div
@@ -113,11 +113,7 @@ export default async function AccountPage() {
         <div className="flex gap-3 mt-4 pt-4 border-t" style={{ borderColor: "var(--color-border)" }}>
           <form action="/api/auth/signin/github" method="POST">
             <input type="hidden" name="callbackUrl" value="/account" />
-            <button
-              type="submit"
-              className="text-sm px-3 py-2 rounded-md border"
-              style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)", borderRadius: "var(--radius-card)" }}
-            >
+            <button type="submit" className="btn btn-secondary btn-sm">
               Refresh GitHub permissions
             </button>
           </form>

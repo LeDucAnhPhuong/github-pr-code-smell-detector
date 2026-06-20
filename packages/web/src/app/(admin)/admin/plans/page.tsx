@@ -4,37 +4,39 @@ export default async function AdminPlansPage() {
   const plans = await getPlansAdmin();
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-6" style={{ color: "var(--color-text-primary)" }}>Subscription Plan Management</h1>
-      <div className="rounded-lg border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}>
-        <table className="w-full text-sm">
+    <div className="page-w">
+      <h1 className="h1" style={{ marginBottom: 20 }}>
+        Subscription plan management
+      </h1>
+      <div className="card" style={{ overflow: "hidden" }}>
+        <table className="table">
           <thead>
-            <tr style={{ borderBottom: `1px solid var(--color-border)`, backgroundColor: "var(--color-surface-muted)" }}>
-              {["Plan", "Price", "Repo Limit", "Analysis Quota", "Check Annotations", "Historical Reports", "Status"].map((h) => (
-                <th key={h} className="text-left px-4 py-2 text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>{h}</th>
-              ))}
+            <tr>
+              <th>Plan</th>
+              <th>Price</th>
+              <th>Repo limit</th>
+              <th>Analysis quota</th>
+              <th>Check annotations</th>
+              <th>Historical reports</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {plans.map((plan) => (
-              <tr key={plan.id} className="border-b last:border-0" style={{ borderColor: "var(--color-border)" }}>
-                <td className="px-4 py-3 font-semibold text-sm" style={{ color: "var(--color-text-primary)" }}>{plan.name}</td>
-                <td className="px-4 py-3 text-sm" style={{ color: "var(--color-text-secondary)" }}>
-                  {Number(plan.price) === 0 ? "Free" : `$${Number(plan.price).toFixed(2)}/mo`}
-                </td>
-                <td className="px-4 py-3 text-sm" style={{ color: "var(--color-text-secondary)" }}>{plan.repositoryLimit}</td>
-                <td className="px-4 py-3 text-sm" style={{ color: "var(--color-text-secondary)" }}>{plan.analysisQuota.toLocaleString()}</td>
-                <td className="px-4 py-3 text-sm" style={{ color: plan.hasCheckAnnotations ? "var(--color-success)" : "var(--color-text-muted)" }}>
+              <tr key={plan.id}>
+                <td className="cell-strong">{plan.name}</td>
+                <td className="secondary">{Number(plan.price) === 0 ? "Free" : `$${Number(plan.price).toFixed(2)}/mo`}</td>
+                <td className="secondary">{plan.repositoryLimit}</td>
+                <td className="secondary">{plan.analysisQuota.toLocaleString()}</td>
+                <td style={{ color: plan.hasCheckAnnotations ? "var(--ok-ink)" : "var(--ink-3)" }}>
                   {plan.hasCheckAnnotations ? "Yes" : "No"}
                 </td>
-                <td className="px-4 py-3 text-sm" style={{ color: plan.hasHistoricalReports ? "var(--color-success)" : "var(--color-text-muted)" }}>
+                <td style={{ color: plan.hasHistoricalReports ? "var(--ok-ink)" : "var(--ink-3)" }}>
                   {plan.hasHistoricalReports ? "Yes" : "No"}
                 </td>
-                <td className="px-4 py-3">
-                  <span
-                    className="text-xs px-2 py-0.5 rounded font-medium"
-                    style={{ backgroundColor: plan.isActive ? "#e6f4ea" : "#f0f3f6", color: plan.isActive ? "#1a7f37" : "#57606a", borderRadius: "var(--radius-badge)" }}
-                  >
+                <td>
+                  <span className="status">
+                    <span className="dot" style={{ background: plan.isActive ? "var(--ok-dot)" : "var(--idle-dot)" }} />
                     {plan.isActive ? "Active" : "Inactive"}
                   </span>
                 </td>

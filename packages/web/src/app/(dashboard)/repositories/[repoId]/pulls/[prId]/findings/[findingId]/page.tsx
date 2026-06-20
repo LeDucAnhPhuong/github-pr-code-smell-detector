@@ -19,110 +19,131 @@ export default async function FindingDetailPage({
   const pr = finding.prAnalysis.pullRequest;
   const githubFileUrl = `https://github.com/${repo.fullName}/blob/${pr.commitSha}/${finding.filePath}#L${finding.lineStart}`;
 
+  const meta: [string, React.ReactNode][] = [
+    ["Rule ID", <span key="rid" className="mono" style={{ fontSize: 12 }}>{finding.ruleId}</span>],
+    ["Category", finding.rule?.category?.name ?? "—"],
+    ["Framework", finding.rule?.framework?.name ?? "—"],
+    ["Analysis", finding.prAnalysisId.slice(0, 8) + "…"],
+    ["Commit SHA", <span key="sha" className="mono" style={{ fontSize: 12 }}>{pr.commitSha.slice(0, 8)}</span>],
+  ];
+
   return (
-    <div className="max-w-7xl mx-auto">
-      <Breadcrumb items={[
-        { label: "Repositories", href: "/repositories" },
-        { label: repo.fullName, href: `/repositories/${repoId}` },
-        { label: `#${pr.prNumber}`, href: `/repositories/${repoId}/pulls/${prId}` },
-        { label: "Findings", href: `/repositories/${repoId}/pulls/${prId}/findings` },
-        { label: finding.ruleName },
-      ]} />
+    <div className="page-w">
+      <Breadcrumb
+        items={[
+          { label: "Repositories", href: "/repositories" },
+          { label: repo.fullName, href: `/repositories/${repoId}` },
+          { label: `#${pr.prNumber}`, href: `/repositories/${repoId}/pulls/${prId}` },
+          { label: "Findings", href: `/repositories/${repoId}/pulls/${prId}/findings` },
+          { label: finding.ruleName },
+        ]}
+      />
 
-      <div className="grid grid-cols-2 gap-6">
-        {/* Left panel: metadata */}
-        <div
-          className="rounded-lg border p-5"
-          style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}
-        >
-          {/* Header */}
-          <div className="flex items-center gap-2 mb-4">
-            <SeverityBadge severity={finding.severity} />
-            <h1 className="text-lg font-semibold" style={{ color: "var(--color-text-primary)" }}>{finding.ruleName}</h1>
-          </div>
-
-          <div className="font-mono text-xs px-2 py-1 rounded mb-4 inline-block" style={{ backgroundColor: "var(--color-surface-muted)", color: "var(--color-text-secondary)" }}>
-            {finding.filePath}:{finding.lineStart}
-          </div>
-
-          {/* Metadata */}
-          <table className="w-full text-sm mb-6">
-            <tbody>
-              {[
-                ["Rule ID", <span key="rid" className="font-mono text-xs">{finding.ruleId}</span>],
-                ["Category", finding.rule?.category?.name ?? "—"],
-                ["Framework", finding.rule?.framework?.name ?? "—"],
-                ["Analysis", finding.prAnalysisId.slice(0, 8) + "…"],
-                ["Commit SHA", <span key="sha" className="font-mono text-xs">{pr.commitSha.slice(0, 8)}</span>],
-              ].map(([label, value]) => (
-                <tr key={String(label)} className="border-b" style={{ borderColor: "var(--color-border)" }}>
-                  <td className="py-2 pr-4 text-xs font-medium w-32" style={{ color: "var(--color-text-muted)" }}>{label}</td>
-                  <td className="py-2 text-xs" style={{ color: "var(--color-text-primary)" }}>{value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Explanation */}
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--color-text-muted)" }}>What was detected</h3>
-              <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>{finding.message}</p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, alignItems: "start" }}>
+        {/* Left: metadata */}
+        <div className="card">
+          <div className="card-head" style={{ background: "var(--bg-subtle)" }}>
+            <div className="row" style={{ gap: 8 }}>
+              <SeverityBadge severity={finding.severity} />
+              <h1 className="h2" style={{ fontSize: 15 }}>
+                {finding.ruleName}
+              </h1>
             </div>
-            {finding.rule?.whyItMatters && (
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--color-text-muted)" }}>Why it matters</h3>
-                <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>{finding.rule.whyItMatters}</p>
-              </div>
-            )}
-            {finding.suggestion && (
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--color-text-muted)" }}>Suggested refactor</h3>
-                <p className="text-sm" style={{ color: "var(--color-text-secondary)" }}>{finding.suggestion}</p>
-              </div>
-            )}
+            <span className="code">
+              {finding.filePath.split("/").slice(-1)}:{finding.lineStart}
+            </span>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-3 mt-6 pt-4 border-t" style={{ borderColor: "var(--color-border)" }}>
-            <a
-              href={githubFileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm px-3 py-2 rounded-md border"
-              style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)", borderRadius: "var(--radius-card)" }}
-            >
+          <div className="card-body stack">
+            <table className="table">
+              <tbody>
+                {meta.map(([label, value]) => (
+                  <tr key={label}>
+                    <td className="muted" style={{ width: 120, fontSize: 12 }}>
+                      {label}
+                    </td>
+                    <td style={{ fontSize: 12.5 }}>{value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="stack">
+              <div>
+                <p className="eyebrow" style={{ marginBottom: 4 }}>
+                  What was detected
+                </p>
+                <p className="secondary" style={{ margin: 0, fontSize: 13 }}>
+                  {finding.message}
+                </p>
+              </div>
+              {finding.rule?.whyItMatters && (
+                <div>
+                  <p className="eyebrow" style={{ marginBottom: 4 }}>
+                    Why it matters
+                  </p>
+                  <p className="secondary" style={{ margin: 0, fontSize: 13 }}>
+                    {finding.rule.whyItMatters}
+                  </p>
+                </div>
+              )}
+              {finding.suggestion && (
+                <div>
+                  <p className="eyebrow" style={{ marginBottom: 4 }}>
+                    Suggested refactor
+                  </p>
+                  <p className="secondary" style={{ margin: 0, fontSize: 13 }}>
+                    {finding.suggestion}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <a href={githubFileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" style={{ width: "fit-content" }}>
               <ExternalLink className="w-3.5 h-3.5" />
               Open file in GitHub
             </a>
           </div>
         </div>
 
-        {/* Right panel: code context */}
-        <div
-          className="rounded-lg border p-5"
-          style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}
-        >
-          <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--color-text-primary)" }}>Code Context</h2>
-          <div
-            className="rounded-md p-4 text-xs font-mono overflow-auto"
-            style={{ backgroundColor: "var(--color-code-bg)", borderRadius: "var(--radius-badge)", minHeight: "200px", border: `1px solid var(--color-border)` }}
-          >
-            <div className="flex items-start gap-3">
-              <span style={{ color: "var(--color-text-muted)", userSelect: "none", minWidth: "2rem" }}>{finding.lineStart}</span>
-              <span
-                className="flex-1 px-2 py-0.5 rounded"
-                style={{
-                  backgroundColor: "var(--color-severity-high-bg)",
-                  color: "var(--color-text-primary)",
-                }}
-              >
-                {`// Line ${finding.lineStart} — ${finding.filePath.split("/").pop()}`}
-              </span>
+        {/* Right: code context */}
+        <div className="card">
+          <div className="card-head">
+            <h2 className="h2">Code context</h2>
+            <span className="code">{finding.filePath}</span>
+          </div>
+          <div className="card-body">
+            <div
+              className="mono"
+              style={{
+                fontSize: 12,
+                background: "var(--code-bg)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--r)",
+                padding: 12,
+                minHeight: 180,
+              }}
+            >
+              <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
+                <span className="muted" style={{ userSelect: "none", minWidth: "2rem" }}>
+                  {finding.lineStart}
+                </span>
+                <span
+                  style={{
+                    flex: 1,
+                    padding: "1px 6px",
+                    borderRadius: 4,
+                    background: "var(--sev-high-bg)",
+                    color: "var(--ink)",
+                  }}
+                >
+                  {`// Line ${finding.lineStart} — ${finding.filePath.split("/").pop()}`}
+                </span>
+              </div>
+              <p className="muted" style={{ marginTop: 16, fontSize: 12 }}>
+                Code context is fetched from GitHub at read time. Open the file in GitHub to see the full source.
+              </p>
             </div>
-            <p className="mt-4 text-xs" style={{ color: "var(--color-text-muted)" }}>
-              Code context is fetched from GitHub at read time. Open the file in GitHub to see the full source.
-            </p>
           </div>
         </div>
       </div>

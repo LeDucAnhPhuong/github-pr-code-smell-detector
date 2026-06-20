@@ -1,0 +1,122 @@
+<!-- @dsCard group="Screens" name="Repositories" subtitle="Table with search + Language/Visibility facets + sort + pager" viewport="1280x800" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Repositories</title>
+  <link rel="stylesheet" href="../tokens.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+        <span style="font-size:13px;font-weight:600">Code Smell Detector</span>
+      </div>
+      <nav class="nav">
+        <div class="nav-label">Overview</div>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+        <a class="nav-item active" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 9v6M20 6a9 9 0 01-9 9"/></svg>Repositories</a>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>Reports</a>
+        <div class="nav-label">Account</div>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Billing</a>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>Settings</a>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="crumb"><span>acme</span><span>/</span><b>Repositories</b></div>
+        <span class="avatar">AD</span>
+      </header>
+
+      <main class="content">
+        <div class="page">
+          <div class="between" style="margin-bottom:18px">
+            <h1 class="h1">Repositories</h1>
+            <button class="btn btn-primary btn-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Connect repository</button>
+          </div>
+
+          <div class="card" style="overflow:hidden">
+            <!-- Toolbar -->
+            <div class="toolbar">
+              <div class="tsearch">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+                <input class="input" placeholder="Search repositories…" />
+              </div>
+              <button class="filter-btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Language</button>
+              <button class="filter-btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Visibility</button>
+              <div class="spacer"></div>
+              <button class="filter-btn" style="border-style:solid"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M7 12h10M11 18h2"/></svg>View</button>
+            </div>
+
+            <table class="table">
+              <thead>
+                <tr>
+                  <th class="sortable asc"><span class="sort">Repository <svg class="arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></th>
+                  <th>Language</th>
+                  <th>Status</th>
+                  <th class="sortable"><span class="sort">Open PRs <svg class="arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></th>
+                  <th>Default branch</th>
+                  <th class="sortable"><span class="sort">Last updated <svg class="arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></span></th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><a class="link cell-strong" href="#">acme/payments-api</a> <span class="badge badge-neutral" style="margin-left:4px">Private</span></td>
+                  <td class="secondary">TypeScript</td>
+                  <td><span class="status"><span class="dot" style="background:var(--ok-dot)"></span>Connected</span></td>
+                  <td class="secondary">7</td>
+                  <td><span class="code">main</span></td>
+                  <td class="muted">3m ago</td>
+                  <td><a class="link" href="#">View</a></td>
+                </tr>
+                <tr>
+                  <td><a class="link cell-strong" href="#">acme/web-dashboard</a></td>
+                  <td class="secondary">TypeScript</td>
+                  <td><span class="status"><span class="dot" style="background:var(--ok-dot)"></span>Connected</span></td>
+                  <td class="secondary">12</td>
+                  <td><span class="code">main</span></td>
+                  <td class="muted">1h ago</td>
+                  <td><a class="link" href="#">View</a></td>
+                </tr>
+                <tr>
+                  <td><a class="link cell-strong" href="#">acme/infra-scripts</a> <span class="badge badge-neutral" style="margin-left:4px">Private</span></td>
+                  <td class="muted">—</td>
+                  <td><span class="status"><span class="dot" style="background:var(--ok-dot)"></span>Connected</span></td>
+                  <td class="secondary">0</td>
+                  <td><span class="code">develop</span></td>
+                  <td class="muted">2d ago</td>
+                  <td><a class="link" href="#">View</a></td>
+                </tr>
+                <tr>
+                  <td><a class="link cell-strong" href="#">acme/design-tokens</a></td>
+                  <td class="secondary">CSS</td>
+                  <td><span class="status"><span class="dot" style="background:var(--ok-dot)"></span>Connected</span></td>
+                  <td class="secondary">3</td>
+                  <td><span class="code">main</span></td>
+                  <td class="muted">5d ago</td>
+                  <td><a class="link" href="#">View</a></td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="table-foot">
+              <span>4 of 4 row(s)</span>
+              <div class="row" style="gap:14px">
+                <span>Page 1 of 1</span>
+                <div class="pager">
+                  <button class="pg" disabled><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+                  <button class="pg" disabled><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

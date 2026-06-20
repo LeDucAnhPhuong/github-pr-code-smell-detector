@@ -12,40 +12,32 @@ export default async function FrameworkSettingsPage({ params }: { params: Promis
   const frameworks = await getFrameworks();
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <Breadcrumb items={[
-        { label: "Repositories", href: "/repositories" },
-        { label: repo.fullName, href: `/repositories/${repoId}` },
-        { label: "Configuration", href: `/repositories/${repoId}/config` },
-        { label: "Frameworks" },
-      ]} />
-      <h1 className="text-2xl font-semibold mb-4" style={{ color: "var(--color-text-primary)" }}>Framework Settings</h1>
-      <div className="grid grid-cols-3 gap-4">
+    <div className="page-w">
+      <Breadcrumb
+        items={[
+          { label: "Repositories", href: "/repositories" },
+          { label: repo.fullName, href: `/repositories/${repoId}` },
+          { label: "Configuration", href: `/repositories/${repoId}/config` },
+          { label: "Frameworks" },
+        ]}
+      />
+      <h1 className="h1" style={{ marginBottom: 12 }}>
+        Framework settings
+      </h1>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
         {frameworks.map((fw) => (
-          <div
-            key={fw.id}
-            className="rounded-lg border p-4"
-            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>{fw.name}</h3>
-              <div
-                className="w-8 h-5 rounded-full flex items-center transition-colors cursor-pointer"
-                style={{ backgroundColor: fw.isActive ? "var(--color-primary)" : "var(--color-border)" }}
-              >
-                <span
-                  className="inline-block h-4 w-4 ml-0.5 rounded-full bg-white transition-transform"
-                  style={{ transform: fw.isActive ? "translateX(12px)" : "translateX(0)" }}
-                />
-              </div>
+          <div key={fw.id} className="card card-body">
+            <div className="between" style={{ marginBottom: 12 }}>
+              <h3 className="h2">{fw.name}</h3>
+              <span className={`switch ${fw.isActive ? "" : "off"}`} />
             </div>
-            <div className="space-y-1 text-xs" style={{ color: "var(--color-text-secondary)" }}>
+            <div className="stack secondary" style={{ fontSize: 12 }}>
               <div>
-                <span className="font-medium">Extensions: </span>
+                <span style={{ fontWeight: 500 }}>Extensions: </span>
                 {fw.supportedExtensions.join(", ")}
               </div>
-              <div>
-                <span className="font-medium">Active rules: </span>
+              <div style={{ marginTop: 4 }}>
+                <span style={{ fontWeight: 500 }}>Active rules: </span>
                 {fw._count.rules}
               </div>
             </div>
