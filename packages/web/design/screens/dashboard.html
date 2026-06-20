@@ -1,0 +1,91 @@
+<!-- @dsCard group="Screens" name="Dashboard" subtitle="Shell + 4 real metrics + recent analyses + high findings" viewport="1280x860" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="../tokens.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+        <span style="font-size:13px;font-weight:600">Code Smell Detector</span>
+      </div>
+      <nav class="nav">
+        <div class="nav-label">Overview</div>
+        <a class="nav-item active" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 9v6M20 6a9 9 0 01-9 9"/></svg>Repositories</a>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>Reports</a>
+        <div class="nav-label">Account</div>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Billing</a>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>Settings</a>
+      </nav>
+      <div style="padding:8px;border-top:1px solid var(--border)">
+        <a class="nav-item" href="#"><span class="avatar">AD</span><span style="display:flex;flex-direction:column;line-height:1.25"><span style="font-size:12.5px;color:var(--ink)">Anh Duc</span><span class="muted" style="font-size:11px">Free plan</span></span></a>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main">
+      <header class="topbar">
+        <div class="crumb"><span>acme</span><span>/</span><b>Dashboard</b></div>
+        <div class="row" style="gap:12px">
+          <button class="btn btn-primary btn-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Connect repository</button>
+          <span class="avatar">AD</span>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="page">
+          <h1 class="h1" style="margin-bottom:20px">Dashboard</h1>
+
+          <!-- Metrics (real values only) -->
+          <div class="grid-4" style="margin-bottom:14px">
+            <div class="card card-body"><div class="eyebrow" style="margin-bottom:10px">Connected repos</div><div style="font-size:24px;font-weight:600;letter-spacing:-.02em">12</div></div>
+            <div class="card card-body"><div class="eyebrow" style="margin-bottom:10px">Open PRs</div><div style="font-size:24px;font-weight:600;letter-spacing:-.02em">34</div></div>
+            <div class="card card-body"><div class="eyebrow" style="margin-bottom:10px">Findings this week</div><div style="font-size:24px;font-weight:600;letter-spacing:-.02em">87</div></div>
+            <div class="card card-body"><div class="eyebrow" style="margin-bottom:10px">Quota used</div><div style="font-size:24px;font-weight:600;letter-spacing:-.02em">62%</div><div class="bar" style="margin-top:10px"><i style="width:62%"></i></div></div>
+          </div>
+
+          <div class="grid-2-1">
+            <!-- Recent analyses -->
+            <div class="card" style="overflow:hidden">
+              <div class="card-head"><h2 class="h2">Recent PR analyses</h2><a class="link" href="#">View all</a></div>
+              <table class="table">
+                <thead><tr><th>PR</th><th>Repository</th><th>Status</th><th>High</th><th>Last run</th></tr></thead>
+                <tbody>
+                  <tr><td><a class="link" href="#">#142 Refactor auth middleware</a></td><td class="secondary mono" style="font-size:12px">acme/payments-api</td><td><span class="status"><span class="dot" style="background:var(--ok-dot)"></span>Completed</span></td><td style="color:var(--sev-high-ink);font-weight:500">2</td><td class="muted">4m ago</td></tr>
+                  <tr><td><a class="link" href="#">#141 Add retry to webhook queue</a></td><td class="secondary mono" style="font-size:12px">acme/payments-api</td><td><span class="status"><span class="dot" style="background:var(--run-dot)"></span>Running</span></td><td class="muted">—</td><td class="muted">now</td></tr>
+                  <tr><td><a class="link" href="#">#139 Migrate to Prisma 7</a></td><td class="secondary mono" style="font-size:12px">acme/web-dashboard</td><td><span class="status"><span class="dot" style="background:var(--ok-dot)"></span>Completed</span></td><td style="color:var(--sev-high-ink);font-weight:500">5</td><td class="muted">1h ago</td></tr>
+                  <tr><td><a class="link" href="#">#137 Tighten ESLint config</a></td><td class="secondary mono" style="font-size:12px">acme/web-dashboard</td><td><span class="status"><span class="dot" style="background:var(--fail-dot)"></span>Failed</span></td><td class="muted">—</td><td class="muted">2h ago</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Right column -->
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <div class="card card-body">
+                <h2 class="h2" style="margin-bottom:10px">Subscription usage</h2>
+                <div class="between" style="font-size:12px;color:var(--ink-2);margin-bottom:7px"><span>Analyses this month</span><span>310 / 500</span></div>
+                <div class="bar"><i style="width:62%"></i></div>
+              </div>
+              <div class="card" style="flex:1;overflow:hidden">
+                <div class="card-head"><h2 class="h2">High severity findings</h2></div>
+                <ul style="margin:0;padding:0;list-style:none">
+                  <li style="padding:10px 16px;border-bottom:1px solid var(--border)"><div class="row" style="gap:8px;margin-bottom:3px"><span class="badge sev-high">High</span><span class="mono" style="font-size:12px;font-weight:500">react/no-array-index-key</span></div><div class="muted mono" style="font-size:11.5px">acme/web-dashboard</div></li>
+                  <li style="padding:10px 16px;border-bottom:1px solid var(--border)"><div class="row" style="gap:8px;margin-bottom:3px"><span class="badge sev-high">High</span><span class="mono" style="font-size:12px;font-weight:500">react/exhaustive-deps</span></div><div class="muted mono" style="font-size:11.5px">acme/payments-api</div></li>
+                  <li style="padding:10px 16px"><div class="row" style="gap:8px;margin-bottom:3px"><span class="badge sev-high">High</span><span class="mono" style="font-size:12px;font-weight:500">complexity/deep-nesting</span></div><div class="muted mono" style="font-size:11.5px">acme/payments-api</div></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

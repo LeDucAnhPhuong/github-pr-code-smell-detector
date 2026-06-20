@@ -4,7 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
-import { Clock } from "lucide-react";
+
+const STATUS_DOT: Record<string, string> = {
+  COMPLETED: "var(--ok-dot)",
+  RUNNING: "var(--run-dot)",
+  FAILED: "var(--fail-dot)",
+  PENDING: "var(--idle-dot)",
+};
 
 export default async function PRListPage({ params }: { params: Promise<{ repoId: string }> }) {
   const session = await auth();
@@ -25,35 +31,38 @@ export default async function PRListPage({ params }: { params: Promise<{ repoId:
   });
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <Breadcrumb items={[{ label: "Repositories", href: "/repositories" }, { label: repo.fullName, href: `/repositories/${repoId}` }, { label: "Pull Requests" }]} />
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold" style={{ color: "var(--color-text-primary)" }}>Pull Requests</h1>
-        <div className="flex gap-2">
-          <a
-            href={`https://github.com/${repo.fullName}/pulls`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm px-3 py-2 rounded-md border"
-            style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)", borderRadius: "var(--radius-card)" }}
-          >
-            Open on GitHub
-          </a>
-        </div>
+    <div className="page-w">
+      <Breadcrumb
+        items={[
+          { label: "Repositories", href: "/repositories" },
+          { label: repo.fullName, href: `/repositories/${repoId}` },
+          { label: "Pull Requests" },
+        ]}
+      />
+      <div className="between" style={{ marginBottom: 18 }}>
+        <h1 className="h1">Pull Requests</h1>
+        <a href={`https://github.com/${repo.fullName}/pulls`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
+          Open on GitHub
+        </a>
       </div>
 
-      <div className="rounded-lg border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}>
+      <div className="card" style={{ overflow: "hidden" }}>
         {pullRequests.length === 0 ? (
-          <div className="p-8 text-center text-sm" style={{ color: "var(--color-text-muted)" }}>
+          <div style={{ padding: 32, textAlign: "center", fontSize: 13, color: "var(--ink-3)" }}>
             No pull requests found. Webhook events will create PR entries automatically.
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="table">
             <thead>
-              <tr style={{ borderBottom: `1px solid var(--color-border)`, backgroundColor: "var(--color-surface-muted)" }}>
-                {["PR", "Author", "Source branch", "Target branch", "Latest Analysis", "Findings", "Updated", ""].map((h) => (
-                  <th key={h} className="text-left px-4 py-2 text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>{h}</th>
-                ))}
+              <tr>
+                <th>PR</th>
+                <th>Author</th>
+                <th>Source</th>
+                <th>Target</th>
+                <th>Latest analysis</th>
+                <th>Findings</th>
+                <th>Updated</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -62,41 +71,36 @@ export default async function PRListPage({ params }: { params: Promise<{ repoId:
                 const findingsCount = latest?.findings.length ?? 0;
                 const elapsed = Math.round((Date.now() - new Date(pr.updatedAt).getTime()) / 60000);
                 return (
-                  <tr key={pr.id} className="border-b last:border-0" style={{ borderColor: "var(--color-border)" }}>
-                    <td className="px-4 py-3">
-                      <Link href={`/repositories/${repoId}/pulls/${pr.id}`} className="font-medium hover:underline" style={{ color: "var(--color-primary)" }}>
-                        #{pr.prNumber} {pr.title.slice(0, 40)}{pr.title.length > 40 ? "…" : ""}
+                  <tr key={pr.id}>
+                    <td>
+                      <Link href={`/repositories/${repoId}/pulls/${pr.id}`} className="link">
+                        #{pr.prNumber} {pr.title.slice(0, 40)}
+                        {pr.title.length > 40 ? "…" : ""}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "var(--color-text-secondary)" }}>{pr.author}</td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--color-surface-muted)", color: "var(--color-text-secondary)" }}>
-                        {pr.sourceBranch}
-                      </span>
+                    <td className="secondary">{pr.author}</td>
+                    <td>
+                      <span className="code">{pr.sourceBranch}</span>
                     </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "var(--color-text-secondary)" }}>{pr.targetBranch}</td>
-                    <td className="px-4 py-3">
+                    <td className="secondary">{pr.targetBranch}</td>
+                    <td>
                       {latest ? (
-                        <span className="text-xs px-2 py-0.5 rounded font-medium" style={{
-                          backgroundColor: latest.status === "COMPLETED" ? "#e6f4ea" : latest.status === "FAILED" ? "#ffebe9" : latest.status === "RUNNING" ? "#ddf4ff" : "#f0f3f6",
-                          color: latest.status === "COMPLETED" ? "#1a7f37" : latest.status === "FAILED" ? "#cf222e" : latest.status === "RUNNING" ? "#0969da" : "#57606a",
-                          borderRadius: "var(--radius-badge)",
-                        }}>
+                        <span className="status">
+                          <span className="dot" style={{ background: STATUS_DOT[latest.status] ?? "var(--idle-dot)" }} />
                           {latest.status.charAt(0) + latest.status.slice(1).toLowerCase()}
                         </span>
-                      ) : <span style={{ color: "var(--color-text-muted)" }}>—</span>}
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
                     </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "var(--color-text-secondary)" }}>
-                      {latest?.status === "COMPLETED" ? `${findingsCount}` : "—"}
+                    <td className="secondary">{latest?.status === "COMPLETED" ? `${findingsCount}` : "—"}</td>
+                    <td className="muted">
+                      {elapsed < 1 ? "now" : elapsed < 60 ? `${elapsed}m ago` : `${Math.round(elapsed / 60)}h ago`}
                     </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "var(--color-text-muted)" }}>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {elapsed < 1 ? "now" : elapsed < 60 ? `${elapsed}m ago` : `${Math.round(elapsed / 60)}h ago`}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs">
-                      <Link href={`/repositories/${repoId}/pulls/${pr.id}`} className="hover:underline" style={{ color: "var(--color-primary)" }}>View</Link>
+                    <td>
+                      <Link href={`/repositories/${repoId}/pulls/${pr.id}`} className="link">
+                        View
+                      </Link>
                     </td>
                   </tr>
                 );

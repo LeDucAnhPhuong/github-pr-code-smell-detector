@@ -1,0 +1,32 @@
+# Never ship host-installed deps or build artifacts into the build context.
+**/node_modules
+**/.next
+**/dist
+**/coverage
+**/.turbo
+
+# VCS & local
+.git
+.gitignore
+
+# Local env & secrets — provided at runtime via compose env_file, not baked in.
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.production.example
+
+# Editor / OS noise
+.idea
+.vscode
+**/.DS_Store
+*-debug.log
+*-error.log
+
+# TLS state generated on the host
+letsencrypt
+acme.json
+
+# Docs (not needed at build time)
+*.md
+docs
+KE-HOACH-PR-COMMENT

@@ -74,7 +74,7 @@ export const mixedResponsibility: Rule = {
 
       // Bubble up API calls and JSX to parent scope
       if (scopeStack.length > 0) {
-        const parent = scopeStack.at(-1)
+        const parent = scopeStack.at(-1)!
         if (current.hasApiCall) parent.hasApiCall = true
         if (current.hasJSX) parent.hasJSX = true
       }
@@ -98,7 +98,7 @@ export const mixedResponsibility: Rule = {
       'ArrowFunctionExpression:exit': exitScope,
       CallExpression(node) {
         if (isApiCall(node) && scopeStack.length > 0) {
-          scopeStack.at(-1).hasApiCall = true
+          scopeStack.at(-1)!.hasApiCall = true
         }
       },
       FunctionDeclaration: enterScope,
@@ -109,7 +109,7 @@ export const mixedResponsibility: Rule = {
 
       JSXElement(node) {
         if (isJSXElement(node) && scopeStack.length > 0) {
-          scopeStack.at(-1).hasJSX = true
+          scopeStack.at(-1)!.hasJSX = true
         }
       },
     }

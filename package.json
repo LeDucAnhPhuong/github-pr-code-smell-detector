@@ -9,9 +9,18 @@
     "build": "npm run build --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test --workspaces --if-present",
+    "dev": "concurrently -k -n analyzer,web,worker -c blue,green,magenta \"npm run dev -w packages/analyzer\" \"npm run dev -w packages/web\" \"npm run worker -w packages/web\"",
+    "dev:apps": "concurrently -k -n analyzer,web -c blue,green \"npm run dev -w packages/analyzer\" \"npm run dev -w packages/web\"",
+    "dev:web": "npm run dev -w packages/web",
+    "dev:worker": "npm run worker -w packages/web",
+    "db:up": "docker compose -f packages/web/docker-compose.yml up -d",
+    "db:down": "docker compose -f packages/web/docker-compose.yml down"
   },
   "engines": {
     "node": ">=24.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
   }
 }

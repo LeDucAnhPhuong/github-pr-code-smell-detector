@@ -1,0 +1,7 @@
+{
+  "projectId": "07b92eaf-a624-4d3c-bcc4-48e219511304",
+  "projectName": "Code Smell Detector Design System",
+  "mode": "hand-authored-previews",
+  "note": "Not a buildable component repo. This folder is a hand-authored design-system preview set: @dsCard HTML cards + tokens.css, uploaded directly via the DesignSync tool (no converter, no dist bundle). Re-sync = finalize_plan over the same write globs below and write_files; the design agent renders these as reference cards.",
+  "writes": ["tokens.css", "*.md", "components/*.html", "screens/*.html"]
+}

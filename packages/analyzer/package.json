@@ -65,6 +65,7 @@
   "scripts": {
     "build": "shx rm -rf dist && tsc -b",
     "build:action": "tsup",
+    "dev": "tsc -b --watch",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "postpack": "shx rm -f oclif.manifest.json",

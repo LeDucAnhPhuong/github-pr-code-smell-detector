@@ -1,0 +1,43 @@
+## Local dev datastore for the web dashboard (Postgres + Redis).
+## Postgres is published on host port 5433 to avoid clashing with a native
+## Postgres that may already be listening on 5432.
+##
+##   docker compose up -d        # start
+##   docker compose down         # stop (keeps data)
+##   docker compose down -v      # stop and wipe data
+services:
+  postgres:
+    image: postgres:17
+    container_name: csd-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: csd
+      POSTGRES_PASSWORD: csd
+      POSTGRES_DB: code_smell_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - csd-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U csd -d code_smell_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: csd-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - csd-redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  csd-pgdata:
+  csd-redisdata:

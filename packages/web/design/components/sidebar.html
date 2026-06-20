@@ -1,0 +1,40 @@
+<!-- @dsCard group="Components" name="Sidebar" subtitle="240px · grouped nav · quiet active state" viewport="280x620" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sidebar</title>
+  <link rel="stylesheet" href="../tokens.css" />
+</head>
+<body>
+  <div style="padding:20px;background:var(--bg)">
+    <aside class="sidebar" style="height:560px;border-radius:var(--r-lg);overflow:hidden;border:1px solid var(--border)">
+      <div class="brand">
+        <span class="brand-mark"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+        <span style="font-size:13px;font-weight:600">Code Smell Detector</span>
+      </div>
+
+      <nav class="nav">
+        <div class="nav-label">Overview</div>
+        <a class="nav-item active" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 9v6M20 6a9 9 0 01-9 9"/></svg>Repositories</a>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>Reports</a>
+
+        <div class="nav-label">Account</div>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>Billing</a>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>Settings</a>
+
+        <div class="nav-label">Admin</div>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Rules</a>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Frameworks</a>
+        <a class="nav-item" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/></svg>Plans</a>
+      </nav>
+
+      <div style="padding:8px;border-top:1px solid var(--border)">
+        <a class="nav-item" href="#"><span class="avatar">AD</span><span style="display:flex;flex-direction:column;line-height:1.25"><span style="font-size:12.5px;color:var(--ink)">Anh Duc</span><span class="muted" style="font-size:11px">Free plan</span></span></a>
+      </div>
+    </aside>
+  </div>
+</body>
+</html>

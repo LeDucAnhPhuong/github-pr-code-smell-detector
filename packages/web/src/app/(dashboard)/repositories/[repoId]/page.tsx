@@ -4,22 +4,25 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
-import { ExternalLink, GitPullRequest, CheckCircle, Settings, FileText, Clock } from "lucide-react";
+import { ExternalLink, Settings } from "lucide-react";
 
-function MetricCard({ label, value, icon: Icon }: { label: string; value: string | number; icon: React.ElementType }) {
+function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div
-      className="rounded-lg border p-4"
-      style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium uppercase tracking-wide" style={{ color: "var(--color-text-muted)" }}>{label}</span>
-        <Icon className="w-4 h-4" style={{ color: "var(--color-text-muted)" }} />
+    <div className="card card-body">
+      <div className="eyebrow" style={{ marginBottom: 8 }}>
+        {label}
       </div>
-      <div className="text-xl font-semibold" style={{ color: "var(--color-text-primary)" }}>{value}</div>
+      <div style={{ fontSize: 20, fontWeight: 600, letterSpacing: "-.01em" }}>{value}</div>
     </div>
   );
 }
+
+const STATUS_DOT: Record<string, string> = {
+  COMPLETED: "var(--ok-dot)",
+  RUNNING: "var(--run-dot)",
+  FAILED: "var(--fail-dot)",
+  PENDING: "var(--idle-dot)",
+};
 
 export default async function RepoDetailPage({ params }: { params: Promise<{ repoId: string }> }) {
   const session = await auth();
@@ -54,73 +57,52 @@ export default async function RepoDetailPage({ params }: { params: Promise<{ rep
   });
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="page-w">
       <Breadcrumb items={[{ label: "Repositories", href: "/repositories" }, { label: repo.fullName }]} />
 
       {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      <div className="between" style={{ alignItems: "flex-start", marginBottom: 18 }}>
         <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-semibold" style={{ color: "var(--color-text-primary)" }}>{repo.fullName}</h1>
-            <a
-              href={`https://github.com/${repo.fullName}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "var(--color-text-muted)" }}
-              title="Open on GitHub"
-            >
+          <div className="row" style={{ gap: 10, marginBottom: 4 }}>
+            <h1 className="h1">{repo.fullName}</h1>
+            <a href={`https://github.com/${repo.fullName}`} target="_blank" rel="noopener noreferrer" className="muted" title="Open on GitHub">
               <ExternalLink className="w-4 h-4" />
             </a>
-            <span
-              className="text-xs px-2 py-0.5 rounded"
-              style={{ backgroundColor: "#e6f4ea", color: "#1a7f37", borderRadius: "var(--radius-badge)" }}
-            >
+            <span className="status">
+              <span className="dot" style={{ background: "var(--ok-dot)" }} />
               Connected
             </span>
           </div>
-          {repo.language && (
-            <span
-              className="inline-flex items-center text-xs px-2 py-0.5 rounded border"
-              style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
-            >
-              {repo.language}
-            </span>
-          )}
+          {repo.language && <span className="badge badge-neutral">{repo.language}</span>}
         </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href={`/repositories/${repoId}/config`}
-            className="inline-flex items-center gap-1.5 text-sm px-3 py-2 rounded-md border transition-colors"
-            style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)", borderRadius: "var(--radius-card)" }}
-          >
-            <Settings className="w-3.5 h-3.5" />
-            Configure rules
-          </Link>
-        </div>
+        <Link href={`/repositories/${repoId}/config`} className="btn btn-secondary btn-sm">
+          <Settings className="w-3.5 h-3.5" />
+          Configure rules
+        </Link>
       </div>
 
       {/* Metrics */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <MetricCard label="Open PRs" value={openPRCount} icon={GitPullRequest} />
-        <MetricCard label="Latest Analysis" value={latestAnalysis?.status ?? "—"} icon={CheckCircle} />
-        <MetricCard label="Active Rules" value={6} icon={Settings} />
-        <MetricCard label="Findings last 7 days" value={findingsCount} icon={FileText} />
+      <div className="grid-4" style={{ marginBottom: 18 }}>
+        <MetricCard label="Open PRs" value={openPRCount} />
+        <MetricCard label="Latest analysis" value={latestAnalysis?.status ?? "—"} />
+        <MetricCard label="Active rules" value={6} />
+        <MetricCard label="Findings last 7 days" value={findingsCount} />
       </div>
 
-      {/* Pull Requests tab */}
-      <div
-        className="rounded-lg border"
-        style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}
-      >
-        <div className="flex items-center gap-1 px-4 pt-4 border-b" style={{ borderColor: "var(--color-border)" }}>
+      {/* Pull Requests */}
+      <div className="card" style={{ overflow: "hidden" }}>
+        <div className="row" style={{ gap: 2, padding: "8px 12px 0", borderBottom: "1px solid var(--border)" }}>
           {["Pull Requests", "Reports", "Configuration"].map((tab, i) => (
             <Link
               key={tab}
               href={i === 0 ? `/repositories/${repoId}/pulls` : i === 1 ? `/repositories/${repoId}/reports` : `/repositories/${repoId}/config`}
-              className="px-3 py-2 text-sm border-b-2 -mb-px transition-colors"
               style={{
-                borderColor: i === 0 ? "var(--color-primary)" : "transparent",
-                color: i === 0 ? "var(--color-primary)" : "var(--color-text-secondary)",
+                padding: "8px 10px",
+                fontSize: 13,
+                marginBottom: -1,
+                borderBottom: `2px solid ${i === 0 ? "var(--ink)" : "transparent"}`,
+                color: i === 0 ? "var(--ink)" : "var(--ink-2)",
+                fontWeight: i === 0 ? 500 : 400,
               }}
             >
               {tab}
@@ -129,16 +111,20 @@ export default async function RepoDetailPage({ params }: { params: Promise<{ rep
         </div>
 
         {pullRequests.length === 0 ? (
-          <div className="p-8 text-center text-sm" style={{ color: "var(--color-text-muted)" }}>
+          <div style={{ padding: 32, textAlign: "center", fontSize: 13, color: "var(--ink-3)" }}>
             No pull requests yet. Sync pull requests from GitHub to get started.
           </div>
         ) : (
-          <table className="w-full text-sm">
+          <table className="table">
             <thead>
-              <tr style={{ borderBottom: `1px solid var(--color-border)` }}>
-                {["PR", "Author", "Branch", "Latest Analysis", "Findings", "Updated", ""].map((h) => (
-                  <th key={h} className="text-left px-4 py-2 text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>{h}</th>
-                ))}
+              <tr>
+                <th>PR</th>
+                <th>Author</th>
+                <th>Branch</th>
+                <th>Latest analysis</th>
+                <th>Findings</th>
+                <th>Updated</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -147,40 +133,35 @@ export default async function RepoDetailPage({ params }: { params: Promise<{ rep
                 const highCount = latest?.findings.filter((f) => f.severity === "error").length ?? 0;
                 const elapsed = Math.round((Date.now() - new Date(pr.updatedAt).getTime()) / 60000);
                 return (
-                  <tr key={pr.id} className="border-b last:border-0" style={{ borderColor: "var(--color-border)" }}>
-                    <td className="px-4 py-3">
-                      <Link href={`/repositories/${repoId}/pulls/${pr.id}`} className="font-medium hover:underline" style={{ color: "var(--color-primary)" }}>
-                        #{pr.prNumber} {pr.title.slice(0, 35)}{pr.title.length > 35 ? "…" : ""}
+                  <tr key={pr.id}>
+                    <td>
+                      <Link href={`/repositories/${repoId}/pulls/${pr.id}`} className="link">
+                        #{pr.prNumber} {pr.title.slice(0, 35)}
+                        {pr.title.length > 35 ? "…" : ""}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "var(--color-text-secondary)" }}>{pr.author}</td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--color-surface-muted)", color: "var(--color-text-secondary)" }}>
-                        {pr.sourceBranch}
-                      </span>
+                    <td className="secondary">{pr.author}</td>
+                    <td>
+                      <span className="code">{pr.sourceBranch}</span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td>
                       {latest ? (
-                        <span className={`text-xs px-2 py-0.5 rounded font-medium`} style={{
-                          backgroundColor: latest.status === "COMPLETED" ? "#e6f4ea" : latest.status === "FAILED" ? "#ffebe9" : latest.status === "RUNNING" ? "#ddf4ff" : "#f0f3f6",
-                          color: latest.status === "COMPLETED" ? "#1a7f37" : latest.status === "FAILED" ? "#cf222e" : latest.status === "RUNNING" ? "#0969da" : "#57606a",
-                          borderRadius: "var(--radius-badge)",
-                        }}>
+                        <span className="status">
+                          <span className="dot" style={{ background: STATUS_DOT[latest.status] ?? "var(--idle-dot)" }} />
                           {latest.status.charAt(0) + latest.status.slice(1).toLowerCase()}
                         </span>
-                      ) : <span style={{ color: "var(--color-text-muted)" }}>—</span>}
+                      ) : (
+                        <span className="muted">—</span>
+                      )}
                     </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "var(--color-text-secondary)" }}>
-                      {latest ? `${latest.findings.length} (${highCount} high)` : "—"}
+                    <td className="secondary">{latest ? `${latest.findings.length} (${highCount} high)` : "—"}</td>
+                    <td className="muted">
+                      {elapsed < 1 ? "now" : elapsed < 60 ? `${elapsed}m ago` : `${Math.round(elapsed / 60)}h ago`}
                     </td>
-                    <td className="px-4 py-3 text-xs" style={{ color: "var(--color-text-muted)" }}>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        {elapsed < 1 ? "now" : elapsed < 60 ? `${elapsed}m ago` : `${Math.round(elapsed / 60)}h ago`}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs">
-                      <Link href={`/repositories/${repoId}/pulls/${pr.id}`} className="hover:underline" style={{ color: "var(--color-primary)" }}>View</Link>
+                    <td>
+                      <Link href={`/repositories/${repoId}/pulls/${pr.id}`} className="link">
+                        View
+                      </Link>
                     </td>
                   </tr>
                 );

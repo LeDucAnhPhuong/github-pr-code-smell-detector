@@ -1,0 +1,97 @@
+<!-- @dsCard group="Screens" name="Findings" subtitle="Toolbar table + detail panel with code diff" viewport="1280x880" -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Findings</title>
+  <link rel="stylesheet" href="../tokens.css" />
+  <style>
+    .codeblock{font-family:var(--font-mono);font-size:12px;line-height:1.75;background:var(--code-bg);
+      border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;overflow:auto}
+    .codeblock .add{background:#E6F4EA;display:block;margin:0 -12px;padding:0 12px}
+    .codeblock .del{background:#FDECEC;display:block;margin:0 -12px;padding:0 12px}
+    .ln{color:var(--ink-3);user-select:none;display:inline-block;width:22px}
+    .frow{display:flex;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer}
+    .frow:hover{background:var(--bg-hover)}
+    .frow.active{background:var(--bg-hover);box-shadow:inset 2px 0 0 var(--ink)}
+  </style>
+</head>
+<body>
+  <div class="page" style="max-width:var(--max)">
+    <div class="crumb" style="margin-bottom:8px"><span>acme/payments-api</span><span>/</span><span>#142</span><span>/</span><b>Findings</b></div>
+    <div class="between" style="margin-bottom:8px">
+      <h1 class="h1">Refactor auth middleware</h1>
+      <button class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Re-run</button>
+    </div>
+    <div class="row" style="gap:18px;margin-bottom:16px;font-size:12.5px">
+      <span class="status"><span class="dot" style="background:var(--sev-high-dot)"></span>High 2</span>
+      <span class="status"><span class="dot" style="background:var(--sev-med-dot)"></span>Medium 4</span>
+      <span class="status"><span class="dot" style="background:var(--sev-low-dot)"></span>Low 2</span>
+      <span class="muted">Rules triggered 5</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:400px 1fr;gap:14px;align-items:start">
+      <!-- List with toolbar -->
+      <div class="card" style="overflow:hidden">
+        <div class="toolbar" style="padding:8px 10px">
+          <div class="tsearch" style="max-width:none">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+            <input class="input" placeholder="Search file or rule…" />
+          </div>
+          <button class="filter-btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Severity</button>
+        </div>
+        <div>
+          <div class="frow active">
+            <span class="badge sev-high" style="flex:none">High</span>
+            <div style="min-width:0"><div class="cell-strong mono" style="font-size:12px">react/no-array-index-key</div><div class="code" style="margin-top:4px">src/components/UserList.tsx:42</div></div>
+          </div>
+          <div class="frow">
+            <span class="badge sev-high" style="flex:none">High</span>
+            <div style="min-width:0"><div class="cell-strong mono" style="font-size:12px">react/exhaustive-deps</div><div class="code" style="margin-top:4px">src/hooks/useAuth.ts:19</div></div>
+          </div>
+          <div class="frow">
+            <span class="badge sev-med" style="flex:none">Med</span>
+            <div style="min-width:0"><div class="cell-strong mono" style="font-size:12px">complexity/function-length</div><div class="code" style="margin-top:4px">src/middleware/auth.ts:88</div></div>
+          </div>
+          <div class="frow">
+            <span class="badge sev-low" style="flex:none">Low</span>
+            <div style="min-width:0"><div class="cell-strong mono" style="font-size:12px">style/prefer-const</div><div class="code" style="margin-top:4px">src/middleware/auth.ts:12</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail -->
+      <div class="card">
+        <div class="card-head" style="background:var(--bg-subtle)">
+          <div class="row" style="gap:8px"><span class="badge sev-high">High</span><h2 class="h2">Array index used as React key</h2></div>
+          <span class="code">react/no-array-index-key</span>
+        </div>
+        <div class="card-body stack">
+          <div>
+            <p class="eyebrow" style="margin:0 0 4px">Why it matters</p>
+            <p class="secondary" style="margin:0;font-size:13px">Using the array index as a <span class="code">key</span> can cause subtle rendering bugs when the list reorders. Use a stable, unique identifier from the item instead.</p>
+          </div>
+
+          <div>
+            <p class="eyebrow" style="margin:0 0 8px">src/components/UserList.tsx</p>
+            <div class="codeblock">
+<span class="del"><span class="ln">41</span>  {users.map((u, i) =&gt; (</span>
+<span class="del"><span class="ln">42</span>    &lt;UserRow key={i} user={u} /&gt;</span>
+<span class="add"><span class="ln">41</span>  {users.map((u) =&gt; (</span>
+<span class="add"><span class="ln">42</span>    &lt;UserRow key={u.id} user={u} /&gt;</span>
+<span><span class="ln">43</span>  ))}</span>
+            </div>
+          </div>
+
+          <div class="row" style="gap:8px">
+            <button class="btn btn-primary btn-sm">Mark reviewed</button>
+            <button class="btn btn-ghost btn-sm">Ignore</button>
+            <a class="link" href="#" style="margin-left:auto;font-size:12.5px">View on GitHub →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
