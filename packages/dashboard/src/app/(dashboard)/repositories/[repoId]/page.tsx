@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { ExternalLink, Settings } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+import { relativeTime } from "@/lib/relative-time";
 
 function MetricCard({ label, value }: { label: string; value: string | number }) {
   return (
@@ -29,6 +31,10 @@ export default async function RepoDetailPage({ params }: { params: Promise<{ rep
   const { repoId } = await params;
   const repo = await getRepository(repoId, session!.user.id);
   if (!repo) notFound();
+
+  const t = await getTranslations("repoDetail");
+  const tStatus = await getTranslations("status");
+  const tTime = await getTranslations("time");
 
   const [openPRCount, latestAnalysis, findingsCount] = await Promise.all([
     prisma.pullRequest.count({ where: { repositoryId: repo.id, state: "OPEN" } }),
@@ -58,7 +64,7 @@ export default async function RepoDetailPage({ params }: { params: Promise<{ rep
 
   return (
     <div className="page-w">
-      <Breadcrumb items={[{ label: "Repositories", href: "/repositories" }, { label: repo.fullName }]} />
+      <Breadcrumb items={[{ label: t("breadcrumbRepos"), href: "/repositories" }, { label: repo.fullName }]} />
 
       {/* Header */}
       <div className="between" style={{ alignItems: "flex-start", marginBottom: 18 }}>
@@ -70,29 +76,29 @@ export default async function RepoDetailPage({ params }: { params: Promise<{ rep
             </a>
             <span className="status">
               <span className="dot" style={{ background: "var(--ok-dot)" }} />
-              Connected
+              {t("connected")}
             </span>
           </div>
           {repo.language && <span className="badge badge-neutral">{repo.language}</span>}
         </div>
         <Link href={`/repositories/${repoId}/config`} className="btn btn-secondary btn-sm">
           <Settings className="w-3.5 h-3.5" />
-          Configure rules
+          {t("configureRules")}
         </Link>
       </div>
 
       {/* Metrics */}
       <div className="grid-4" style={{ marginBottom: 18 }}>
-        <MetricCard label="Open PRs" value={openPRCount} />
-        <MetricCard label="Latest analysis" value={latestAnalysis?.status ?? "—"} />
-        <MetricCard label="Active rules" value={6} />
-        <MetricCard label="Findings last 7 days" value={findingsCount} />
+        <MetricCard label={t("openPRs")} value={openPRCount} />
+        <MetricCard label={t("latestAnalysis")} value={latestAnalysis ? tStatus(latestAnalysis.status) : "—"} />
+        <MetricCard label={t("activeRules")} value={6} />
+        <MetricCard label={t("findingsLast7")} value={findingsCount} />
       </div>
 
       {/* Pull Requests */}
       <div className="card" style={{ overflow: "hidden" }}>
         <div className="row" style={{ gap: 2, padding: "8px 12px 0", borderBottom: "1px solid var(--border)" }}>
-          {["Pull Requests", "Reports", "Configuration"].map((tab, i) => (
+          {[t("tabPulls"), t("tabReports"), t("tabConfig")].map((tab, i) => (
             <Link
               key={tab}
               href={i === 0 ? `/repositories/${repoId}/pulls` : i === 1 ? `/repositories/${repoId}/reports` : `/repositories/${repoId}/config`}
@@ -112,18 +118,18 @@ export default async function RepoDetailPage({ params }: { params: Promise<{ rep
 
         {pullRequests.length === 0 ? (
           <div style={{ padding: 32, textAlign: "center", fontSize: 13, color: "var(--ink-3)" }}>
-            No pull requests yet. Sync pull requests from GitHub to get started.
+            {t("noPullRequests")}
           </div>
         ) : (
           <table className="table">
             <thead>
               <tr>
-                <th>PR</th>
-                <th>Author</th>
-                <th>Branch</th>
-                <th>Latest analysis</th>
-                <th>Findings</th>
-                <th>Updated</th>
+                <th>{t("thPR")}</th>
+                <th>{t("thAuthor")}</th>
+                <th>{t("thBranch")}</th>
+                <th>{t("thLatestAnalysis")}</th>
+                <th>{t("thFindings")}</th>
+                <th>{t("thUpdated")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -131,7 +137,6 @@ export default async function RepoDetailPage({ params }: { params: Promise<{ rep
               {pullRequests.map((pr) => {
                 const latest = pr.analyses[0];
                 const highCount = latest?.findings.filter((f) => f.severity === "error").length ?? 0;
-                const elapsed = Math.round((Date.now() - new Date(pr.updatedAt).getTime()) / 60000);
                 return (
                   <tr key={pr.id}>
                     <td>
@@ -148,19 +153,19 @@ export default async function RepoDetailPage({ params }: { params: Promise<{ rep
                       {latest ? (
                         <span className="status">
                           <span className="dot" style={{ background: STATUS_DOT[latest.status] ?? "var(--idle-dot)" }} />
-                          {latest.status.charAt(0) + latest.status.slice(1).toLowerCase()}
+                          {tStatus(latest.status)}
                         </span>
                       ) : (
                         <span className="muted">—</span>
                       )}
                     </td>
-                    <td className="secondary">{latest ? `${latest.findings.length} (${highCount} high)` : "—"}</td>
+                    <td className="secondary">{latest ? t("findingsCount", { total: latest.findings.length, high: highCount }) : "—"}</td>
                     <td className="muted">
-                      {elapsed < 1 ? "now" : elapsed < 60 ? `${elapsed}m ago` : `${Math.round(elapsed / 60)}h ago`}
+                      {relativeTime(pr.updatedAt, tTime)}
                     </td>
                     <td>
                       <Link href={`/repositories/${repoId}/pulls/${pr.id}`} className="link">
-                        View
+                        {t("view")}
                       </Link>
                     </td>
                   </tr>

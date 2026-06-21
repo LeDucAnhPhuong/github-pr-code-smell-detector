@@ -3,6 +3,7 @@ import { getRepository } from "@/lib/db/repositories";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { getTranslations } from "next-intl/server";
 
 const FILE_STATUS_DOT: Record<string, string> = {
   ANALYZED: "var(--ok-dot)",
@@ -30,49 +31,51 @@ export default async function ChangedFilesPage({ params }: { params: Promise<{ r
   const skipped = files.filter((f) => f.status === "SKIPPED").length;
   const diagnostics = files.filter((f) => f.status === "DIAGNOSTIC").length;
 
+  const t = await getTranslations("filesPage");
+
   return (
     <div className="page-w">
       <Breadcrumb
         items={[
-          { label: "Repositories", href: "/repositories" },
+          { label: t("breadcrumbRepos"), href: "/repositories" },
           { label: repo.fullName, href: `/repositories/${repoId}` },
           { label: `#${pr.prNumber}`, href: `/repositories/${repoId}/pulls/${prId}` },
-          { label: "Changed Files" },
+          { label: t("breadcrumbChangedFiles") },
         ]}
       />
       <h1 className="h1" style={{ marginBottom: 12 }}>
-        Changed files
+        {t("title")}
       </h1>
 
       <div className="row" style={{ gap: 18, marginBottom: 16, fontSize: 12.5 }}>
-        <span className="secondary">{files.length} changed files</span>
+        <span className="secondary">{t("changedFilesCount", { count: files.length })}</span>
         <span className="status">
           <span className="dot" style={{ background: "var(--ok-dot)" }} />
-          {analyzed} analyzed
+          {t("analyzedCount", { count: analyzed })}
         </span>
-        <span className="muted">{skipped} skipped</span>
+        <span className="muted">{t("skippedCount", { count: skipped })}</span>
         {diagnostics > 0 && (
           <span className="status">
             <span className="dot" style={{ background: "var(--fail-dot)" }} />
-            {diagnostics} parser diagnostic{diagnostics !== 1 ? "s" : ""}
+            {t("diagnosticsCount", { count: diagnostics })}
           </span>
         )}
       </div>
 
       <div className="card" style={{ overflow: "hidden" }}>
         {files.length === 0 ? (
-          <div style={{ padding: 32, textAlign: "center", fontSize: 13, color: "var(--ink-3)" }}>No file data available.</div>
+          <div style={{ padding: 32, textAlign: "center", fontSize: 13, color: "var(--ink-3)" }}>{t("noFileData")}</div>
         ) : (
           <table className="table">
             <thead>
               <tr>
-                <th>File</th>
-                <th>Type</th>
-                <th>Status</th>
+                <th>{t("thFile")}</th>
+                <th>{t("thType")}</th>
+                <th>{t("thStatus")}</th>
                 <th>+</th>
                 <th>−</th>
-                <th>Findings</th>
-                <th>Parser</th>
+                <th>{t("thFindings")}</th>
+                <th>{t("thParser")}</th>
               </tr>
             </thead>
             <tbody>
@@ -85,7 +88,7 @@ export default async function ChangedFilesPage({ params }: { params: Promise<{ r
                   <td>
                     <span className="status">
                       <span className="dot" style={{ background: FILE_STATUS_DOT[f.status] ?? "var(--idle-dot)" }} />
-                      {f.status.charAt(0) + f.status.slice(1).toLowerCase()}
+                      {t(`status_${f.status}`)}
                     </span>
                   </td>
                   <td style={{ color: "var(--ok-ink)" }}>+{f.additions}</td>

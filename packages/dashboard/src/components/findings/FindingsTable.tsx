@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ColumnDef } from "@tanstack/react-table";
 import type { Severity } from "@/types";
 import { DataTable } from "@/components/ui/DataTable";
@@ -33,17 +34,21 @@ export function FindingsTable({
   repoId: string;
   prId: string;
 }) {
+  const t = useTranslations("findings");
+  const tStatus = useTranslations("findingStatus");
+  const tSeverity = useTranslations("severity");
+
   const columns = useMemo<ColumnDef<FindingRow>[]>(
     () => [
       {
         accessorKey: "severity",
-        header: "Severity",
+        header: t("colSeverity"),
         filterFn: "arrIncludesSome",
         cell: ({ getValue }) => <SeverityBadge severity={getValue<Severity>()} />,
       },
       {
         accessorKey: "ruleName",
-        header: "Rule",
+        header: t("colRule"),
         cell: ({ getValue }) => (
           <span className="cell-strong mono" style={{ fontSize: 12 }}>
             {getValue<string>()}
@@ -52,30 +57,30 @@ export function FindingsTable({
       },
       {
         accessorKey: "category",
-        header: "Category",
+        header: t("colCategory"),
         filterFn: "arrIncludesSome",
         cell: ({ getValue }) => <span className="secondary">{getValue<string>()}</span>,
       },
       {
         accessorKey: "filePath",
-        header: "File",
+        header: t("colFile"),
         cell: ({ row }) => <span className="code">{row.original.fileShort}</span>,
       },
       {
         accessorKey: "lineStart",
-        header: "Line",
+        header: t("colLine"),
         cell: ({ getValue }) => <span className="muted">{getValue<number>()}</span>,
       },
       {
         accessorKey: "status",
-        header: "Status",
+        header: t("colStatus"),
         filterFn: "arrIncludesSome",
         cell: ({ getValue }) => {
           const s = getValue<string>();
           return (
             <span className="status">
               <span className="dot" style={{ background: STATUS_DOT[s] ?? "var(--idle-dot)" }} />
-              {s.charAt(0) + s.slice(1).toLowerCase()}
+              {tStatus(s)}
             </span>
           );
         },
@@ -87,41 +92,41 @@ export function FindingsTable({
         enableHiding: false,
         cell: ({ row }) => (
           <Link className="link" href={`/repositories/${repoId}/pulls/${prId}/findings/${row.original.id}`}>
-            View
+            {t("view")}
           </Link>
         ),
       },
     ],
-    [repoId, prId]
+    [repoId, prId, t, tStatus]
   );
 
   return (
     <DataTable
       columns={columns}
       data={rows}
-      searchPlaceholder="Search file or rule…"
+      searchPlaceholder={t("searchPlaceholder")}
       facets={[
         {
           columnId: "severity",
-          title: "Severity",
+          title: t("colSeverity"),
           options: [
-            { value: "error", label: "High" },
-            { value: "warning", label: "Medium" },
-            { value: "info", label: "Low" },
+            { value: "error", label: tSeverity("high") },
+            { value: "warning", label: tSeverity("medium") },
+            { value: "info", label: tSeverity("low") },
           ],
         },
-        { columnId: "category", title: "Category" },
+        { columnId: "category", title: t("colCategory") },
         {
           columnId: "status",
-          title: "Status",
+          title: t("colStatus"),
           options: [
-            { value: "OPEN", label: "Open" },
-            { value: "REVIEWED", label: "Reviewed" },
-            { value: "IGNORED", label: "Ignored" },
+            { value: "OPEN", label: tStatus("OPEN") },
+            { value: "REVIEWED", label: tStatus("REVIEWED") },
+            { value: "IGNORED", label: tStatus("IGNORED") },
           ],
         },
       ]}
-      emptyMessage="No findings match your filters."
+      emptyMessage={t("emptyFiltered")}
     />
   );
 }

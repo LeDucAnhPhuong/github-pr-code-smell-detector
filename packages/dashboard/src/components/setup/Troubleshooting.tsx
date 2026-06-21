@@ -1,28 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
 
-const items = [
-  {
-    q: "PR không thấy comment",
-    a: "Repo chưa được chọn khi cài App (vào Configure để thêm), hoặc đã hết hạn mức (quota) tháng này.",
-  },
-  {
-    q: "Comment báo lỗi quyền",
-    a: "App thiếu quyền Pull requests/Checks. Gỡ và cài lại App (bản đã cập nhật quyền).",
-  },
-  {
-    q: "Không có Check run",
-    a: "Gói hiện tại không bật check annotation, hoặc App thiếu quyền Checks.",
-  },
-  {
-    q: "Bot phân tích nhầm file",
-    a: "Chỉnh target/exclude paths trong Repository → Config.",
-  },
-];
-
 export function Troubleshooting() {
+  const t = useTranslations("setup");
+  const items = t.raw("troubleshooting") as { q: string; a: string }[];
   const [open, setOpen] = useState<number | null>(null);
 
   return (

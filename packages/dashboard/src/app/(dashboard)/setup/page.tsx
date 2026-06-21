@@ -6,6 +6,7 @@ import { Troubleshooting } from "@/components/setup/Troubleshooting";
 import { InstallAppButton } from "@/components/setup/InstallAppButton";
 import Link from "next/link";
 import { GitPullRequest, Settings, Trash2, Gauge } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 function Card({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
   return (
@@ -27,14 +28,16 @@ export default async function SetupPage() {
   const installations = await getInstallationsByUser(userId);
   const connected = installations.length > 0;
   const slug = appSlug();
+  const t = await getTranslations("setup");
+  const strong = (chunks: React.ReactNode) => <strong>{chunks}</strong>;
 
   return (
     <div style={{ maxWidth: 820, margin: "0 auto" }}>
       <div className="between" style={{ marginBottom: 18 }}>
-        <h1 className="h1">Bắt đầu với MergeTrack</h1>
+        <h1 className="h1">{t("pageTitle")}</h1>
         <span className="status">
           <span className="dot" style={{ background: connected ? "var(--ok-dot)" : "var(--idle-dot)" }} />
-          {connected ? "Đã kết nối" : "Chưa kết nối"}
+          {connected ? t("connected") : t("notConnected")}
         </span>
       </div>
 
@@ -46,12 +49,12 @@ export default async function SetupPage() {
       {connected && (
         <div className="card card-body between" style={{ marginBottom: 18 }}>
           <p className="secondary" style={{ margin: 0, fontSize: 13 }}>
-            App đã được cài ({installations.map((i) => i.accountLogin).join(", ")}). Quản lý repo trong mục Repositories.
+            {t("appInstalled", { accounts: installations.map((i) => i.accountLogin).join(", ") })}
           </p>
           <div className="row" style={{ gap: 10 }}>
-            <InstallAppButton slug={slug} label="Thêm repo" />
+            <InstallAppButton slug={slug} label={t("addRepo")} />
             <Link href="/repositories" className="btn btn-secondary btn-sm">
-              Tới Repositories
+              {t("goToRepositories")}
             </Link>
           </div>
         </div>
@@ -59,26 +62,22 @@ export default async function SetupPage() {
 
       {/* Info cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14, marginBottom: 18 }}>
-        <Card title="Khi nào bot chạy?" icon={GitPullRequest}>
-          Tự động khi có Pull request được mở / push thêm / mở lại. Trong dưới 1 phút, PR có
-          <strong> 1 comment của bot</strong> (cập nhật tại chỗ ở lần push sau) và <strong>1 mục trong tab Checks</strong>.
-          Kết quả cũng lưu trên dashboard.
+        <Card title={t("cardWhenTitle")} icon={GitPullRequest}>
+          {t.rich("cardWhenBody", { strong })}
         </Card>
-        <Card title="Tuỳ chỉnh (tuỳ chọn)" icon={Settings}>
-          Vào Repository → Config để bật/tắt rule, chỉnh ngưỡng, giới hạn đường dẫn, hoặc bật chế độ chặn merge khi có lỗi
-          nghiêm trọng. Mặc định bot chỉ nhắc, không chặn.
+        <Card title={t("cardCustomizeTitle")} icon={Settings}>
+          {t("cardCustomizeBody")}
         </Card>
-        <Card title="Quản lý &amp; gỡ" icon={Trash2}>
-          Thêm/bớt repo hoặc gỡ hẳn tại GitHub → Settings → Applications → (tên App) → Configure.
+        <Card title={t("cardManageTitle")} icon={Trash2}>
+          {t("cardManageBody")}
         </Card>
-        <Card title="Hạn mức" icon={Gauge}>
-          Mỗi gói có số lượt phân tích/tháng (Free 30 · Pro 100 · Team 1000). Hết hạn mức, PR mới hiện “Quota exceeded” và bot
-          tạm dừng.
+        <Card title={t("cardQuotaTitle")} icon={Gauge}>
+          {t("cardQuotaBody")}
         </Card>
       </div>
 
       <p className="eyebrow" style={{ marginBottom: 12 }}>
-        Sự cố thường gặp
+        {t("troubleshootingTitle")}
       </p>
       <Troubleshooting />
     </div>

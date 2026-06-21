@@ -1,8 +1,10 @@
 "use client";
 
 import { signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { Github, LogOut } from "lucide-react";
 import Image from "next/image";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 interface TopBarProps {
   user: {
@@ -13,17 +15,19 @@ interface TopBarProps {
 }
 
 export function TopBar({ user }: TopBarProps) {
+  const t = useTranslations("topbar");
   return (
     <header className="topbar">
       {/* GitHub connection status */}
       <div className="status">
         <Github className="w-3.5 h-3.5" />
-        <span>Connected</span>
+        <span>{t("connected")}</span>
         <span className="dot" style={{ background: "var(--ok-dot)" }} />
       </div>
 
       {/* User info */}
       <div className="row" style={{ gap: 12 }}>
+        <LanguageSwitcher />
         <span className="secondary" style={{ fontSize: 12.5 }}>
           {user.name ?? user.email}
         </span>
@@ -35,10 +39,10 @@ export function TopBar({ user }: TopBarProps) {
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
           className="btn btn-ghost btn-sm"
-          title="Sign out"
+          title={t("signOut")}
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Sign out</span>
+          <span>{t("signOut")}</span>
         </button>
       </div>
     </header>

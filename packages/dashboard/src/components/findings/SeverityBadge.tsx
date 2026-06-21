@@ -1,6 +1,7 @@
 // SeverityBadge is the ONLY place severity colors are defined.
 // Never hardcode severity colors anywhere else.
 
+import { useTranslations } from "next-intl";
 import type { Severity } from "@/types";
 
 const SEVERITY_STYLE: Record<Severity, { label: string; bg: string; color: string; border: string }> = {
@@ -24,6 +25,12 @@ const SEVERITY_STYLE: Record<Severity, { label: string; bg: string; color: strin
   },
 };
 
+const SEVERITY_LABEL_KEY: Record<Severity, string> = {
+  error: "high",
+  warning: "medium",
+  info: "low",
+};
+
 interface SeverityBadgeProps {
   severity: Severity;
   className?: string;
@@ -36,8 +43,12 @@ const SEVERITY_CLASS: Record<Severity, string> = {
 };
 
 export function SeverityBadge({ severity, className = "" }: SeverityBadgeProps) {
-  const style = SEVERITY_STYLE[severity];
-  return <span className={`badge ${SEVERITY_CLASS[severity]} ${className}`}>{style.label}</span>;
+  const t = useTranslations("severity");
+  return (
+    <span className={`badge ${SEVERITY_CLASS[severity]} ${className}`}>
+      {t(SEVERITY_LABEL_KEY[severity])}
+    </span>
+  );
 }
 
 export { SEVERITY_STYLE };

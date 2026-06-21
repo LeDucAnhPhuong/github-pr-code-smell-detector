@@ -7,6 +7,7 @@ import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { SeverityBadge } from "@/components/findings/SeverityBadge";
 import { AnalysisStatusPoller, AnalysisStatusBadge } from "@/components/analyses/AnalysisStatus";
 import { AlertTriangle, ExternalLink } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 function MetricCard({ label, value, highlight }: { label: string; value: string | number; highlight?: boolean }) {
   return (
@@ -45,13 +46,15 @@ export default async function PRAnalysisDetailPage({ params }: { params: Promise
   const mediumCount = latestAnalysis?.findings.filter((f) => f.severity === "warning").length ?? 0;
   const lowCount = latestAnalysis?.findings.filter((f) => f.severity === "info").length ?? 0;
 
+  const t = await getTranslations("prDetail");
+
   return (
     <div className="page-w">
       <Breadcrumb
         items={[
-          { label: "Repositories", href: "/repositories" },
+          { label: t("breadcrumbRepos"), href: "/repositories" },
           { label: repo.fullName, href: `/repositories/${repoId}` },
-          { label: "Pull Requests", href: `/repositories/${repoId}/pulls` },
+          { label: t("breadcrumbPulls"), href: `/repositories/${repoId}/pulls` },
           { label: `#${pr.prNumber}` },
         ]}
       />
@@ -70,26 +73,26 @@ export default async function PRAnalysisDetailPage({ params }: { params: Promise
                 <AnalysisStatusBadge status={latestAnalysis.status} />
               )
             ) : (
-              <span className="muted">No analysis yet</span>
+              <span className="muted">{t("noAnalysisYet")}</span>
             )}
             <span className="code">{pr.commitSha.slice(0, 8)}</span>
           </div>
         </div>
         <a href={pr.githubUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
           <ExternalLink className="w-3.5 h-3.5" />
-          Open in GitHub
+          {t("openInGithub")}
         </a>
       </div>
 
       {/* Summary cards */}
       {latestAnalysis?.status === "COMPLETED" && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(6,1fr)", gap: 14, marginBottom: 18 }}>
-          <MetricCard label="Total findings" value={latestAnalysis.findings.length} />
-          <MetricCard label="High" value={highCount} highlight={highCount > 0} />
-          <MetricCard label="Medium" value={mediumCount} />
-          <MetricCard label="Low" value={lowCount} />
-          <MetricCard label="Files analyzed" value={latestAnalysis.changedFiles.filter((f) => f.status === "ANALYZED").length} />
-          <MetricCard label="Runtime" value={latestAnalysis.runtimeMs ? `${(latestAnalysis.runtimeMs / 1000).toFixed(1)}s` : "—"} />
+          <MetricCard label={t("totalFindings")} value={latestAnalysis.findings.length} />
+          <MetricCard label={t("high")} value={highCount} highlight={highCount > 0} />
+          <MetricCard label={t("medium")} value={mediumCount} />
+          <MetricCard label={t("low")} value={lowCount} />
+          <MetricCard label={t("filesAnalyzed")} value={latestAnalysis.changedFiles.filter((f) => f.status === "ANALYZED").length} />
+          <MetricCard label={t("runtime")} value={latestAnalysis.runtimeMs ? `${(latestAnalysis.runtimeMs / 1000).toFixed(1)}s` : "—"} />
         </div>
       )}
 
@@ -101,10 +104,10 @@ export default async function PRAnalysisDetailPage({ params }: { params: Promise
         >
           <div className="row" style={{ gap: 8, marginBottom: 6 }}>
             <AlertTriangle className="w-4 h-4" style={{ color: "var(--sev-high-ink)" }} />
-            <span style={{ fontWeight: 600, color: "var(--sev-high-ink)" }}>Analysis failed</span>
+            <span style={{ fontWeight: 600, color: "var(--sev-high-ink)" }}>{t("analysisFailed")}</span>
           </div>
           <p style={{ margin: 0, fontSize: 13 }}>
-            {latestAnalysis.diagnosticMessage ?? "An error occurred during analysis. Check your webhook and configuration."}
+            {latestAnalysis.diagnosticMessage ?? t("analysisFailedDefault")}
           </p>
         </div>
       )}
@@ -112,7 +115,7 @@ export default async function PRAnalysisDetailPage({ params }: { params: Promise
       {/* Tabs + findings preview */}
       <div className="card" style={{ overflow: "hidden" }}>
         <div className="row" style={{ gap: 2, padding: "8px 12px 0", borderBottom: "1px solid var(--border)" }}>
-          {["Findings", "Changed Files", "Evaluation", "Raw Report"].map((tab, i) => (
+          {[t("tabFindings"), t("tabChangedFiles"), t("tabEvaluation"), t("tabRawReport")].map((tab, i) => (
             <Link
               key={tab}
               href={
@@ -138,17 +141,17 @@ export default async function PRAnalysisDetailPage({ params }: { params: Promise
 
         {!latestAnalysis || latestAnalysis.findings.length === 0 ? (
           <div style={{ padding: 32, textAlign: "center", fontSize: 13, color: "var(--ink-3)" }}>
-            {latestAnalysis?.status === "COMPLETED" ? "No findings detected." : "Run analysis to see findings."}
+            {latestAnalysis?.status === "COMPLETED" ? t("noFindingsDetected") : t("runAnalysisToSee")}
           </div>
         ) : (
           <table className="table">
             <thead>
               <tr>
-                <th>Severity</th>
-                <th>Rule</th>
-                <th>File</th>
-                <th>Line</th>
-                <th>Message</th>
+                <th>{t("thSeverity")}</th>
+                <th>{t("thRule")}</th>
+                <th>{t("thFile")}</th>
+                <th>{t("thLine")}</th>
+                <th>{t("thMessage")}</th>
               </tr>
             </thead>
             <tbody>
@@ -177,7 +180,7 @@ export default async function PRAnalysisDetailPage({ params }: { params: Promise
         {latestAnalysis && latestAnalysis.findings.length > 10 && (
           <div className="card-foot">
             <Link href={`/repositories/${repoId}/pulls/${prId}/findings`} className="link">
-              View all {latestAnalysis.findings.length} findings →
+              {t("viewAllFindings", { count: latestAnalysis.findings.length })}
             </Link>
           </div>
         )}

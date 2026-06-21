@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 import path from "node:path";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 const nextConfig: NextConfig = {
   // Produce a self-contained server bundle (.next/standalone) for a slim Docker image.
@@ -13,6 +16,8 @@ const nextConfig: NextConfig = {
     ],
   },
   serverExternalPackages: ["@prisma/adapter-pg", "pg"],
+  // Shared workspace package compiled from TS source.
+  transpilePackages: ["@github-pr-code-smell-detector/core"],
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

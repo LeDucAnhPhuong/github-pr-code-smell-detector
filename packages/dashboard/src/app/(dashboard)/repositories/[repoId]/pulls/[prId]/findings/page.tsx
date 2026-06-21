@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { FindingsTable, type FindingRow } from "@/components/findings/FindingsTable";
+import { getTranslations } from "next-intl/server";
 
 export default async function FindingsListPage({ params }: { params: Promise<{ repoId: string; prId: string }> }) {
   const session = await auth();
@@ -39,14 +40,16 @@ export default async function FindingsListPage({ params }: { params: Promise<{ r
     status: f.status,
   }));
 
+  const t = await getTranslations("findingsPage");
+
   return (
     <div className="page-w">
       <Breadcrumb
         items={[
-          { label: "Repositories", href: "/repositories" },
+          { label: t("breadcrumbRepos"), href: "/repositories" },
           { label: repo.fullName, href: `/repositories/${repoId}` },
           { label: `#${pr.prNumber}`, href: `/repositories/${repoId}/pulls/${prId}` },
-          { label: "Findings" },
+          { label: t("breadcrumbFindings") },
         ]}
       />
 
@@ -58,22 +61,22 @@ export default async function FindingsListPage({ params }: { params: Promise<{ r
       <div className="row" style={{ gap: 18, marginBottom: 16, fontSize: 12.5 }}>
         <span className="status">
           <span className="dot" style={{ background: "var(--sev-high-dot)" }} />
-          High {highCount}
+          {t("highCount", { count: highCount })}
         </span>
         <span className="status">
           <span className="dot" style={{ background: "var(--sev-med-dot)" }} />
-          Medium {mediumCount}
+          {t("mediumCount", { count: mediumCount })}
         </span>
         <span className="status">
           <span className="dot" style={{ background: "var(--sev-low-dot)" }} />
-          Low {lowCount}
+          {t("lowCount", { count: lowCount })}
         </span>
-        <span className="muted">Rules triggered {rulesTriggered}</span>
+        <span className="muted">{t("rulesTriggered", { count: rulesTriggered })}</span>
       </div>
 
       {findings.length === 0 ? (
         <div className="card card-body" style={{ textAlign: "center", padding: 40, color: "var(--ink-3)" }}>
-          No findings detected.
+          {t("noFindings")}
         </div>
       ) : (
         <FindingsTable rows={rows} repoId={repoId} prId={prId} />

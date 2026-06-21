@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Github } from "lucide-react";
 
 interface InstallAppButtonProps {
@@ -7,7 +8,8 @@ interface InstallAppButtonProps {
   label?: string;
 }
 
-export function InstallAppButton({ slug, label = "Cài GitHub App" }: InstallAppButtonProps) {
+export function InstallAppButton({ slug, label }: InstallAppButtonProps) {
+  const t = useTranslations("setup");
   const href = slug
     ? `https://github.com/apps/${slug}/installations/new`
     : undefined;
@@ -15,7 +17,7 @@ export function InstallAppButton({ slug, label = "Cài GitHub App" }: InstallApp
   if (!href) {
     return (
       <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-        Chưa cấu hình GITHUB_APP_SLUG — không thể tạo liên kết cài đặt.
+        {t("appSlugNotConfigured")}
       </span>
     );
   }
@@ -23,7 +25,7 @@ export function InstallAppButton({ slug, label = "Cài GitHub App" }: InstallApp
   return (
     <a href={href} className="btn btn-primary">
       <Github className="w-4 h-4" />
-      {label}
+      {label ?? t("installApp")}
     </a>
   );
 }

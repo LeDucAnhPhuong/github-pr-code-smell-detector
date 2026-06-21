@@ -2,29 +2,26 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import Image from "next/image";
 import { CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { getGithubPermissions } from "@/lib/github-permissions";
+import { getTranslations } from "next-intl/server";
 
 export default async function AccountPage() {
   const session = await auth();
   const userId = session!.user.id;
+  const t = await getTranslations("account");
 
   const account = await prisma.account.findFirst({
     where: { userId, provider: "github" },
     select: { scope: true, expires_at: true },
   });
 
-  const scopes = account?.scope?.split(",").map((s) => s.trim()) ?? [];
   const isTokenExpired = account?.expires_at && account.expires_at * 1000 < Date.now();
 
-  const permissions = [
-    { label: "Repository read", required: "repo", present: scopes.some((s) => s === "repo" || s === "public_repo") },
-    { label: "Pull Request read", required: "repo", present: scopes.some((s) => s === "repo") },
-    { label: "Checks write", required: "checks:write", present: scopes.some((s) => s.includes("checks")) },
-    { label: "PR comments write", required: "repo", present: scopes.some((s) => s === "repo") },
-  ];
+  const permissions = getGithubPermissions(account?.scope);
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="h1" style={{ marginBottom: 20 }}>Account</h1>
+      <h1 className="h1" style={{ marginBottom: 20 }}>{t("title")}</h1>
 
       {isTokenExpired && (
         <div
@@ -34,10 +31,10 @@ export default async function AccountPage() {
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "var(--color-danger)" }} />
           <div>
             <p className="text-sm font-medium" style={{ color: "var(--color-text-primary)" }}>
-              Token expired — re-authorize with GitHub
+              {t("tokenExpiredTitle")}
             </p>
             <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
-              Your GitHub token has expired. Sign out and sign back in to refresh it.
+              {t("tokenExpiredDesc")}
             </p>
           </div>
         </div>
@@ -70,14 +67,14 @@ export default async function AccountPage() {
                 className="text-xs px-2 py-0.5 rounded font-medium"
                 style={{ backgroundColor: "#e6f4ea", color: "#1a7f37", borderRadius: "var(--radius-badge)" }}
               >
-                GitHub Connected
+                {t("githubConnected")}
               </span>
               {session!.user.role === "ADMIN" && (
                 <span
                   className="text-xs px-2 py-0.5 rounded font-medium"
                   style={{ backgroundColor: "var(--color-severity-medium-bg)", color: "var(--color-warning)", borderRadius: "var(--radius-badge)" }}
                 >
-                  Admin
+                  {t("admin")}
                 </span>
               )}
             </div>
@@ -90,7 +87,7 @@ export default async function AccountPage() {
         className="rounded-lg border p-5"
         style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", borderRadius: "var(--radius-card)" }}
       >
-        <h2 className="text-sm font-semibold mb-4" style={{ color: "var(--color-text-primary)" }}>GitHub Permissions</h2>
+        <h2 className="text-sm font-semibold mb-4" style={{ color: "var(--color-text-primary)" }}>{t("githubPermissions")}</h2>
         <div className="space-y-3">
           {permissions.map(({ label, present }) => (
             <div key={label} className="flex items-center justify-between">
@@ -98,12 +95,12 @@ export default async function AccountPage() {
               {present ? (
                 <span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--color-success)" }}>
                   <CheckCircle className="w-4 h-4" />
-                  Granted
+                  {t("granted")}
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5 text-xs" style={{ color: "var(--color-danger)" }}>
                   <XCircle className="w-4 h-4" />
-                  Not granted
+                  {t("notGranted")}
                 </span>
               )}
             </div>
@@ -114,7 +111,7 @@ export default async function AccountPage() {
           <form action="/api/auth/signin/github" method="POST">
             <input type="hidden" name="callbackUrl" value="/account" />
             <button type="submit" className="btn btn-secondary btn-sm">
-              Refresh GitHub permissions
+              {t("refreshPermissions")}
             </button>
           </form>
         </div>

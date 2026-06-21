@@ -1,20 +1,30 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { NextIntlClientProvider } from "next-intl";
 import { SeverityBadge, SEVERITY_STYLE } from "@/components/findings/SeverityBadge";
+import enMessages from "@/messages/en.json";
+
+function renderBadge(severity: "error" | "warning" | "info") {
+  return render(
+    <NextIntlClientProvider locale="en" messages={enMessages}>
+      <SeverityBadge severity={severity} />
+    </NextIntlClientProvider>
+  );
+}
 
 describe("SeverityBadge", () => {
   it("renders High label for error severity", () => {
-    render(<SeverityBadge severity="error" />);
+    renderBadge("error");
     expect(screen.getByText("High")).toBeDefined();
   });
 
   it("renders Medium label for warning severity", () => {
-    render(<SeverityBadge severity="warning" />);
+    renderBadge("warning");
     expect(screen.getByText("Medium")).toBeDefined();
   });
 
   it("renders Low label for info severity", () => {
-    render(<SeverityBadge severity="info" />);
+    renderBadge("info");
     expect(screen.getByText("Low")).toBeDefined();
   });
 

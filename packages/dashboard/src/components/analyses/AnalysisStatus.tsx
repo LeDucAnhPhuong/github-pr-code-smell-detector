@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { AnalysisStatus } from "@/types";
 
 interface AnalysisStatusPollerProps {
@@ -17,13 +18,14 @@ const STATUS_DOT: Record<AnalysisStatus, string> = {
 };
 
 export function AnalysisStatusBadge({ status }: { status: AnalysisStatus }) {
+  const t = useTranslations("status");
   return (
     <span className="status" style={{ fontSize: 13 }}>
       <span
         className={`dot ${status === "RUNNING" ? "animate-pulse" : ""}`}
         style={{ background: STATUS_DOT[status] }}
       />
-      {status.charAt(0) + status.slice(1).toLowerCase()}
+      {t(status)}
     </span>
   );
 }

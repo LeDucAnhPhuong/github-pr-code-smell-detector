@@ -7,6 +7,7 @@ import { SeverityBadge } from "@/components/findings/SeverityBadge";
 import { GitBranch, Plus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 function MetricCard({ label, value, href }: { label: string; value: string | number; href?: string }) {
   const card = (
@@ -27,11 +28,11 @@ const STATUS_DOT: Record<string, string> = {
   PENDING: "var(--idle-dot)",
 };
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, label }: { status: string; label: string }) {
   return (
     <span className="status">
       <span className="dot" style={{ background: STATUS_DOT[status] ?? "var(--idle-dot)" }} />
-      {status.charAt(0) + status.slice(1).toLowerCase()}
+      {label}
     </span>
   );
 }
@@ -45,37 +46,39 @@ export default async function DashboardPage() {
     redirect("/setup");
   }
 
-  const [stats, recentAnalyses, highFindings, repos] = await Promise.all([
+  const [stats, recentAnalyses, highFindings, repos, t, tStatus] = await Promise.all([
     getDashboardStats(userId),
     getRecentAnalyses(userId, 5),
     getHighSeverityFindings(userId, 4),
     getRepositories(userId),
+    getTranslations("dashboard"),
+    getTranslations("status"),
   ]);
 
   const reposNeedingAttention = repos.filter((r) => r.pullRequests.length > 0);
 
   return (
     <div className="page-w stack">
-      <h1 className="h1">Dashboard</h1>
+      <h1 className="h1">{t("title")}</h1>
 
       {/* Metrics */}
       <div className="grid-4">
-        <MetricCard label="Connected repos" value={stats.repoCount} href="/repositories" />
-        <MetricCard label="Open PRs" value={stats.openPRCount} />
-        <MetricCard label="Findings this week" value={stats.findingsThisWeek} />
-        <MetricCard label="Quota used" value={`${stats.quotaPercent}%`} href="/billing" />
+        <MetricCard label={t("connectedRepos")} value={stats.repoCount} href="/repositories" />
+        <MetricCard label={t("openPRs")} value={stats.openPRCount} />
+        <MetricCard label={t("findingsThisWeek")} value={stats.findingsThisWeek} />
+        <MetricCard label={t("quotaUsed")} value={`${stats.quotaPercent}%`} href="/billing" />
       </div>
 
       {repos.length === 0 ? (
         <div className="card card-body" style={{ textAlign: "center", padding: 48 }}>
           <GitBranch className="w-7 h-7" style={{ margin: "0 auto 12px", color: "var(--ink-3)" }} />
-          <p style={{ fontWeight: 600, margin: "0 0 4px" }}>No repositories connected</p>
+          <p style={{ fontWeight: 600, margin: "0 0 4px" }}>{t("noReposTitle")}</p>
           <p className="secondary" style={{ margin: "0 0 16px", fontSize: 12.5 }}>
-            Connect a GitHub repository to start analyzing pull request changes.
+            {t("noReposDesc")}
           </p>
           <Link href="/repositories" className="btn btn-primary" style={{ margin: "0 auto", width: "fit-content" }}>
             <Plus className="w-4 h-4" />
-            Connect repository
+            {t("connectRepository")}
           </Link>
         </div>
       ) : (
@@ -84,28 +87,28 @@ export default async function DashboardPage() {
             {/* Recent analyses */}
             <div className="card" style={{ overflow: "hidden" }}>
               <div className="card-head">
-                <h2 className="h2">Recent PR analyses</h2>
+                <h2 className="h2">{t("recentAnalyses")}</h2>
                 <Link className="link" href="/repositories">
-                  View all
+                  {t("viewAll")}
                 </Link>
               </div>
               {recentAnalyses.length === 0 ? (
                 <div style={{ padding: 32, textAlign: "center", fontSize: 13, color: "var(--ink-3)" }}>
-                  No analyses yet.{" "}
+                  {t("noAnalysesYet")}{" "}
                   <Link href="/repositories" className="link">
-                    Connect a repository
+                    {t("connectARepository")}
                   </Link>
                 </div>
               ) : (
                 <table className="table">
                   <thead>
                     <tr>
-                      <th>PR</th>
-                      <th>Repository</th>
-                      <th>Status</th>
-                      <th>Findings</th>
-                      <th>High</th>
-                      <th>Last run</th>
+                      <th>{t("thPR")}</th>
+                      <th>{t("thRepository")}</th>
+                      <th>{t("thStatus")}</th>
+                      <th>{t("thFindings")}</th>
+                      <th>{t("thHigh")}</th>
+                      <th>{t("thLastRun")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -124,7 +127,7 @@ export default async function DashboardPage() {
                             {a.pullRequest.repository.fullName}
                           </td>
                           <td>
-                            <StatusBadge status={a.status} />
+                            <StatusBadge status={a.status} label={tStatus(a.status)} />
                           </td>
                           <td className="secondary">{a.status === "COMPLETED" ? `${a.findings?.length ?? 0}` : "—"}</td>
                           <td>
@@ -135,7 +138,11 @@ export default async function DashboardPage() {
                             )}
                           </td>
                           <td className="muted">
-                            {elapsed < 1 ? "now" : elapsed < 60 ? `${elapsed}m ago` : `${Math.round(elapsed / 60)}h ago`}
+                            {elapsed < 1
+                              ? t("timeNow")
+                              : elapsed < 60
+                              ? t("minutesAgo", { m: elapsed })
+                              : t("hoursAgo", { h: Math.round(elapsed / 60) })}
                           </td>
                         </tr>
                       );
@@ -149,10 +156,10 @@ export default async function DashboardPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div className="card card-body">
                 <h2 className="h2" style={{ marginBottom: 10 }}>
-                  Subscription usage
+                  {t("subscriptionUsage")}
                 </h2>
                 <div className="between" style={{ fontSize: 12, color: "var(--ink-2)", marginBottom: 7 }}>
-                  <span>Analyses this month</span>
+                  <span>{t("analysesThisMonth")}</span>
                   <span>
                     {stats.analysisUsed} / {stats.analysisQuota}
                   </span>
@@ -167,9 +174,9 @@ export default async function DashboardPage() {
                 </div>
                 {stats.quotaPercent > 80 && (
                   <p className="field-help" style={{ color: "var(--sev-high-ink)" }}>
-                    Over 80% quota used.{" "}
+                    {t("over80Quota")}{" "}
                     <Link href="/billing/plans" className="link">
-                      Upgrade
+                      {t("upgrade")}
                     </Link>
                   </p>
                 )}
@@ -177,11 +184,11 @@ export default async function DashboardPage() {
 
               <div className="card" style={{ flex: 1, overflow: "hidden" }}>
                 <div className="card-head">
-                  <h2 className="h2">High severity findings</h2>
+                  <h2 className="h2">{t("highSeverityFindings")}</h2>
                 </div>
                 {highFindings.length === 0 ? (
                   <p style={{ padding: "24px 16px", textAlign: "center", fontSize: 13, color: "var(--ink-3)" }}>
-                    No high severity findings
+                    {t("noHighFindings")}
                   </p>
                 ) : (
                   <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
@@ -208,7 +215,7 @@ export default async function DashboardPage() {
           {reposNeedingAttention.length > 0 && (
             <div className="card" style={{ overflow: "hidden" }}>
               <div className="card-head">
-                <h2 className="h2">Repositories needing attention</h2>
+                <h2 className="h2">{t("reposNeedingAttention")}</h2>
               </div>
               <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
                 {reposNeedingAttention.slice(0, 5).map((r) => (
@@ -221,7 +228,7 @@ export default async function DashboardPage() {
                       {r.fullName}
                     </Link>
                     <span className="muted" style={{ fontSize: 12 }}>
-                      {r.pullRequests.length} open PR{r.pullRequests.length !== 1 ? "s" : ""}
+                      {t("openPRCount", { count: r.pullRequests.length })}
                     </span>
                   </li>
                 ))}

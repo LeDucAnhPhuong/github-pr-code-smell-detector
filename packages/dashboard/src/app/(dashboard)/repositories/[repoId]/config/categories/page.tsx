@@ -4,6 +4,7 @@ import { getCategories } from "@/lib/db/admin";
 import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { SeverityBadge } from "@/components/findings/SeverityBadge";
+import { getTranslations } from "next-intl/server";
 
 export default async function CategorySettingsPage({ params }: { params: Promise<{ repoId: string }> }) {
   const session = await auth();
@@ -11,29 +12,30 @@ export default async function CategorySettingsPage({ params }: { params: Promise
   const repo = await getRepository(repoId, session!.user.id);
   if (!repo) notFound();
   const categories = await getCategories();
+  const t = await getTranslations("categoriesPage");
 
   return (
     <div className="page-w">
       <Breadcrumb
         items={[
-          { label: "Repositories", href: "/repositories" },
+          { label: t("breadcrumbRepos"), href: "/repositories" },
           { label: repo.fullName, href: `/repositories/${repoId}` },
-          { label: "Configuration", href: `/repositories/${repoId}/config` },
-          { label: "Categories" },
+          { label: t("breadcrumbConfig"), href: `/repositories/${repoId}/config` },
+          { label: t("breadcrumbCategories") },
         ]}
       />
       <h1 className="h1" style={{ marginBottom: 12 }}>
-        Category settings
+        {t("title")}
       </h1>
       <div className="card" style={{ overflow: "hidden" }}>
         <table className="table">
           <thead>
             <tr>
-              <th>Category</th>
-              <th>Description</th>
-              <th>Rules</th>
-              <th>Default severity</th>
-              <th>Status</th>
+              <th>{t("thCategory")}</th>
+              <th>{t("thDescription")}</th>
+              <th>{t("thRules")}</th>
+              <th>{t("thDefaultSeverity")}</th>
+              <th>{t("thStatus")}</th>
             </tr>
           </thead>
           <tbody>
@@ -51,7 +53,7 @@ export default async function CategorySettingsPage({ params }: { params: Promise
                 <td>
                   <span className="status">
                     <span className="dot" style={{ background: cat.isActive ? "var(--ok-dot)" : "var(--idle-dot)" }} />
-                    {cat.isActive ? "Active" : "Inactive"}
+                    {cat.isActive ? t("active") : t("inactive")}
                   </span>
                 </td>
               </tr>

@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { getTranslations } from "next-intl/server";
+import { relativeTime } from "@/lib/relative-time";
 
 const STATUS_DOT: Record<string, string> = {
   COMPLETED: "var(--ok-dot)",
@@ -17,6 +19,10 @@ export default async function PRListPage({ params }: { params: Promise<{ repoId:
   const { repoId } = await params;
   const repo = await getRepository(repoId, session!.user.id);
   if (!repo) notFound();
+
+  const t = await getTranslations("pullsPage");
+  const tStatus = await getTranslations("status");
+  const tTime = await getTranslations("time");
 
   const pullRequests = await prisma.pullRequest.findMany({
     where: { repositoryId: repo.id },
@@ -34,34 +40,34 @@ export default async function PRListPage({ params }: { params: Promise<{ repoId:
     <div className="page-w">
       <Breadcrumb
         items={[
-          { label: "Repositories", href: "/repositories" },
+          { label: t("breadcrumbRepos"), href: "/repositories" },
           { label: repo.fullName, href: `/repositories/${repoId}` },
-          { label: "Pull Requests" },
+          { label: t("breadcrumbPulls") },
         ]}
       />
       <div className="between" style={{ marginBottom: 18 }}>
-        <h1 className="h1">Pull Requests</h1>
+        <h1 className="h1">{t("title")}</h1>
         <a href={`https://github.com/${repo.fullName}/pulls`} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
-          Open on GitHub
+          {t("openOnGithub")}
         </a>
       </div>
 
       <div className="card" style={{ overflow: "hidden" }}>
         {pullRequests.length === 0 ? (
           <div style={{ padding: 32, textAlign: "center", fontSize: 13, color: "var(--ink-3)" }}>
-            No pull requests found. Webhook events will create PR entries automatically.
+            {t("noPulls")}
           </div>
         ) : (
           <table className="table">
             <thead>
               <tr>
-                <th>PR</th>
-                <th>Author</th>
-                <th>Source</th>
-                <th>Target</th>
-                <th>Latest analysis</th>
-                <th>Findings</th>
-                <th>Updated</th>
+                <th>{t("thPR")}</th>
+                <th>{t("thAuthor")}</th>
+                <th>{t("thSource")}</th>
+                <th>{t("thTarget")}</th>
+                <th>{t("thLatestAnalysis")}</th>
+                <th>{t("thFindings")}</th>
+                <th>{t("thUpdated")}</th>
                 <th></th>
               </tr>
             </thead>
@@ -69,7 +75,6 @@ export default async function PRListPage({ params }: { params: Promise<{ repoId:
               {pullRequests.map((pr) => {
                 const latest = pr.analyses[0];
                 const findingsCount = latest?.findings.length ?? 0;
-                const elapsed = Math.round((Date.now() - new Date(pr.updatedAt).getTime()) / 60000);
                 return (
                   <tr key={pr.id}>
                     <td>
@@ -87,7 +92,7 @@ export default async function PRListPage({ params }: { params: Promise<{ repoId:
                       {latest ? (
                         <span className="status">
                           <span className="dot" style={{ background: STATUS_DOT[latest.status] ?? "var(--idle-dot)" }} />
-                          {latest.status.charAt(0) + latest.status.slice(1).toLowerCase()}
+                          {tStatus(latest.status)}
                         </span>
                       ) : (
                         <span className="muted">—</span>
@@ -95,11 +100,11 @@ export default async function PRListPage({ params }: { params: Promise<{ repoId:
                     </td>
                     <td className="secondary">{latest?.status === "COMPLETED" ? `${findingsCount}` : "—"}</td>
                     <td className="muted">
-                      {elapsed < 1 ? "now" : elapsed < 60 ? `${elapsed}m ago` : `${Math.round(elapsed / 60)}h ago`}
+                      {relativeTime(pr.updatedAt, tTime)}
                     </td>
                     <td>
                       <Link href={`/repositories/${repoId}/pulls/${pr.id}`} className="link">
-                        View
+                        {t("view")}
                       </Link>
                     </td>
                   </tr>

@@ -1,28 +1,34 @@
 import { auth } from "@/lib/auth";
 import { getSubscription, getUsage } from "@/lib/db/billing";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 export default async function SubscriptionPage() {
   const session = await auth();
   const userId = session!.user.id;
-  const [subscription, usage] = await Promise.all([getSubscription(userId), getUsage(userId)]);
+  const [subscription, usage, t, tSubStatus] = await Promise.all([
+    getSubscription(userId),
+    getUsage(userId),
+    getTranslations("subscriptionPage"),
+    getTranslations("subscriptionStatus"),
+  ]);
 
   const details: [string, string][] = [
-    ["Subscription ID", subscription?.id?.slice(0, 8).toUpperCase() ?? "—"],
-    ["Plan", subscription?.plan.name ?? "—"],
-    ["Status", subscription?.status ?? "—"],
-    ["Started", subscription?.startDate ? new Date(subscription.startDate).toLocaleDateString() : "—"],
-    ["Renews", subscription?.renewalDate ? new Date(subscription.renewalDate).toLocaleDateString() : "—"],
-    ["Billing owner", subscription?.billingOwner ?? session!.user.name ?? "—"],
+    [t("subscriptionId"), subscription?.id?.slice(0, 8).toUpperCase() ?? "—"],
+    [t("plan"), subscription?.plan.name ?? "—"],
+    [t("status"), subscription ? tSubStatus(subscription.status) : "—"],
+    [t("started"), subscription?.startDate ? new Date(subscription.startDate).toLocaleDateString() : "—"],
+    [t("renews"), subscription?.renewalDate ? new Date(subscription.renewalDate).toLocaleDateString() : "—"],
+    [t("billingOwner"), subscription?.billingOwner ?? session!.user.name ?? "—"],
   ];
 
   return (
     <div className="page-w stack">
-      <h1 className="h1">Current subscription</h1>
+      <h1 className="h1">{t("title")}</h1>
 
       <div className="card">
         <div className="card-head">
-          <h2 className="h2">Subscription details</h2>
+          <h2 className="h2">{t("detailsHeading")}</h2>
         </div>
         <div className="card-body">
           <table className="table">
@@ -42,13 +48,13 @@ export default async function SubscriptionPage() {
 
       <div className="card card-body">
         <h2 className="h2" style={{ marginBottom: 14 }}>
-          Usage quota
+          {t("usageQuota")}
         </h2>
         <div className="stack" style={{ gap: 12 }}>
           {[
-            { label: "Repositories", used: usage?.repositoryCount ?? 0, limit: subscription?.plan.repositoryLimit ?? 3 },
-            { label: "Analyses this month", used: usage?.analysisCount ?? 0, limit: subscription?.plan.analysisQuota ?? 30 },
-            { label: "Reports", used: usage?.reportCount ?? 0, limit: 999 },
+            { label: t("repositories"), used: usage?.repositoryCount ?? 0, limit: subscription?.plan.repositoryLimit ?? 3 },
+            { label: t("analysesThisMonth"), used: usage?.analysisCount ?? 0, limit: subscription?.plan.analysisQuota ?? 30 },
+            { label: t("reports"), used: usage?.reportCount ?? 0, limit: 999 },
           ].map(({ label, used, limit }) => (
             <div key={label}>
               <div className="between" style={{ fontSize: 12, color: "var(--ink-2)", marginBottom: 6 }}>
@@ -69,9 +75,9 @@ export default async function SubscriptionPage() {
 
       <div className="row" style={{ gap: 10 }}>
         <Link href="/billing/plans" className="btn btn-primary btn-sm">
-          Change plan
+          {t("changePlan")}
         </Link>
-        <button className="btn btn-danger btn-sm">Cancel subscription</button>
+        <button className="btn btn-danger btn-sm">{t("cancelSubscription")}</button>
       </div>
     </div>
   );

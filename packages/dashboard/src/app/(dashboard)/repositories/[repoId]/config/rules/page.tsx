@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { SeverityBadge } from "@/components/findings/SeverityBadge";
 import { Check } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 export default async function RuleSettingsPage({ params }: { params: Promise<{ repoId: string }> }) {
   const session = await auth();
@@ -13,6 +14,7 @@ export default async function RuleSettingsPage({ params }: { params: Promise<{ r
   if (!repo) notFound();
 
   const rules = await getRules();
+  const t = await getTranslations("rulesPage");
   const config = (repo.config as Record<string, Record<string, unknown>>) ?? {};
   const ruleOverrides = (config.rules as Record<string, Record<string, unknown>>) ?? {};
 
@@ -20,14 +22,14 @@ export default async function RuleSettingsPage({ params }: { params: Promise<{ r
     <div className="page-w">
       <Breadcrumb
         items={[
-          { label: "Repositories", href: "/repositories" },
+          { label: t("breadcrumbRepos"), href: "/repositories" },
           { label: repo.fullName, href: `/repositories/${repoId}` },
-          { label: "Configuration", href: `/repositories/${repoId}/config` },
-          { label: "Rules" },
+          { label: t("breadcrumbConfig"), href: `/repositories/${repoId}/config` },
+          { label: t("breadcrumbRules") },
         ]}
       />
       <h1 className="h1" style={{ marginBottom: 12 }}>
-        Rule settings
+        {t("title")}
       </h1>
 
       <div className="card" style={{ overflow: "hidden" }}>
@@ -35,12 +37,12 @@ export default async function RuleSettingsPage({ params }: { params: Promise<{ r
           <thead>
             <tr>
               <th></th>
-              <th>Rule</th>
-              <th>Framework</th>
-              <th>Category</th>
-              <th>Severity</th>
-              <th>Threshold</th>
-              <th>Blocking</th>
+              <th>{t("thRule")}</th>
+              <th>{t("thFramework")}</th>
+              <th>{t("thCategory")}</th>
+              <th>{t("thSeverity")}</th>
+              <th>{t("thThreshold")}</th>
+              <th>{t("thBlocking")}</th>
             </tr>
           </thead>
           <tbody>
@@ -66,7 +68,7 @@ export default async function RuleSettingsPage({ params }: { params: Promise<{ r
                     <SeverityBadge severity={rule.defaultSeverity} />
                   </td>
                   <td className="secondary">{rule.defaultThreshold ? `${rule.defaultThreshold}` : "—"}</td>
-                  <td className="muted">{(override.blocking as boolean) ? "Yes" : "No"}</td>
+                  <td className="muted">{(override.blocking as boolean) ? t("yes") : t("no")}</td>
                 </tr>
               );
             })}

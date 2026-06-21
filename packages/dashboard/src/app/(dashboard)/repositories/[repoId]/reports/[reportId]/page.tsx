@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { SeverityBadge } from "@/components/findings/SeverityBadge";
 import { CopyButton } from "@/components/reports/CopyButton";
+import { getTranslations } from "next-intl/server";
 
 export default async function ReportDetailPage({ params }: { params: Promise<{ repoId: string; reportId: string }> }) {
   const session = await auth();
@@ -17,13 +18,16 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ r
   const mediumCount = report.prAnalysis.findings.filter((f) => f.severity === "warning").length;
   const lowCount = report.prAnalysis.findings.filter((f) => f.severity === "info").length;
 
+  const t = await getTranslations("reportDetail");
+  const tReportStatus = await getTranslations("reportStatus");
+
   return (
     <div className="page-w">
       <Breadcrumb
         items={[
-          { label: "Repositories", href: "/repositories" },
+          { label: t("breadcrumbRepos"), href: "/repositories" },
           { label: repo.fullName, href: `/repositories/${repoId}` },
-          { label: "Reports", href: `/repositories/${repoId}/reports` },
+          { label: t("breadcrumbReports"), href: `/repositories/${repoId}/reports` },
           { label: report.id.slice(0, 8).toUpperCase() },
         ]}
       />
@@ -32,7 +36,7 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ r
         {/* Markdown preview */}
         <div className="card">
           <div className="card-head">
-            <h2 className="h2">Report preview</h2>
+            <h2 className="h2">{t("reportPreview")}</h2>
             <CopyButton text={report.content} />
           </div>
           <div className="card-body">
@@ -50,7 +54,7 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ r
                 whiteSpace: "pre-wrap",
               }}
             >
-              {report.content || "# Code Smell Report\n\nNo findings detected in this analysis run."}
+              {report.content || t("emptyReport")}
             </pre>
           </div>
         </div>
@@ -58,16 +62,16 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ r
         {/* Metadata */}
         <div className="card">
           <div className="card-head">
-            <h2 className="h2">Metadata</h2>
+            <h2 className="h2">{t("metadata")}</h2>
           </div>
           <div className="card-body">
             <dl className="stack" style={{ fontSize: 12 }}>
               {(
                 [
-                  ["Pull request", `#${pr.prNumber} ${pr.title.slice(0, 30)}`],
-                  ["Commit SHA", pr.commitSha.slice(0, 8)],
-                  ["Status", report.status],
-                  ["Created", new Date(report.createdAt).toLocaleString()],
+                  [t("pullRequest"), `#${pr.prNumber} ${pr.title.slice(0, 30)}`],
+                  [t("commitSha"), pr.commitSha.slice(0, 8)],
+                  [t("status"), tReportStatus(report.status)],
+                  [t("created"), new Date(report.createdAt).toLocaleString()],
                 ] as [string, string][]
               ).map(([label, value]) => (
                 <div key={label}>
@@ -80,7 +84,7 @@ export default async function ReportDetailPage({ params }: { params: Promise<{ r
             </dl>
             <hr className="divider" style={{ margin: "14px 0" }} />
             <p className="eyebrow" style={{ marginBottom: 8 }}>
-              Findings by severity
+              {t("findingsBySeverity")}
             </p>
             <div className="stack" style={{ gap: 6 }}>
               <div className="between">

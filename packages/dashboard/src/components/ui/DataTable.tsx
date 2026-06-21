@@ -5,6 +5,7 @@
 // fetched by the server — no new API calls or logic.
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   type ColumnDef,
   type SortingState,
@@ -51,11 +52,14 @@ interface DataTableProps<TData, TValue> {
 export function DataTable<TData, TValue>({
   columns,
   data,
-  searchPlaceholder = "Search…",
+  searchPlaceholder,
   facets = [],
   pageSize = 10,
-  emptyMessage = "No results.",
+  emptyMessage,
 }: DataTableProps<TData, TValue>) {
+  const t = useTranslations("table");
+  const searchText = searchPlaceholder ?? t("searchPlaceholder");
+  const emptyText = emptyMessage ?? t("noResults");
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
@@ -89,7 +93,7 @@ export function DataTable<TData, TValue>({
           <Search />
           <input
             className="input"
-            placeholder={searchPlaceholder}
+            placeholder={searchText}
             value={globalFilter}
             onChange={(e) => setGlobalFilter(e.target.value)}
           />
@@ -110,7 +114,7 @@ export function DataTable<TData, TValue>({
               setGlobalFilter("");
             }}
           >
-            Reset <X className="ic" />
+            {t("reset")} <X className="ic" />
           </button>
         )}
 
@@ -156,7 +160,7 @@ export function DataTable<TData, TValue>({
             {table.getRowModel().rows.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} style={{ textAlign: "center", padding: "40px", color: "var(--ink-3)" }}>
-                  {emptyMessage}
+                  {emptyText}
                 </td>
               </tr>
             ) : (
@@ -175,11 +179,11 @@ export function DataTable<TData, TValue>({
       {/* Footer / pagination */}
       <div className="table-foot">
         <span>
-          {totalRows} row{totalRows !== 1 ? "s" : ""}
+          {t("rowCount", { count: totalRows })}
         </span>
         <div className="row" style={{ gap: 14 }}>
           <span>
-            Rows per page
+            {t("rowsPerPage")}
             <select
               className="select"
               style={{ display: "inline-flex", width: "auto", height: 26, padding: "0 24px 0 8px", marginLeft: 6, fontSize: 12 }}
@@ -194,7 +198,10 @@ export function DataTable<TData, TValue>({
             </select>
           </span>
           <span>
-            Page {table.getState().pagination.pageIndex + 1} of {Math.max(table.getPageCount(), 1)}
+            {t("pageOf", {
+              page: table.getState().pagination.pageIndex + 1,
+              total: Math.max(table.getPageCount(), 1),
+            })}
           </span>
           <div className="pager">
             <button className="pg" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
@@ -220,6 +227,7 @@ function FacetFilter<TData>({
   title: string;
   options?: { value: string; label: string }[];
 }) {
+  const t = useTranslations("table");
   const facetCounts = column.getFacetedUniqueValues();
   const selected = new Set((column.getFilterValue() as string[]) ?? []);
   const opts =
@@ -252,7 +260,7 @@ function FacetFilter<TData>({
       <Dropdown.Portal>
         <Dropdown.Content className="menu" align="start" sideOffset={6} style={{ minWidth: 200, zIndex: 50 }}>
           <Dropdown.Label className="muted" style={{ fontSize: 11, padding: "4px 8px" }}>
-            Filter {title.toLowerCase()}
+            {t("filterBy", { title: title.toLowerCase() })}
           </Dropdown.Label>
           {opts.map((o) => {
             const isOn = selected.has(o.value);
@@ -277,18 +285,19 @@ function FacetFilter<TData>({
 
 /* ── column visibility menu ──────────────────────────────────────────── */
 function ViewMenu<TData>({ table }: { table: import("@tanstack/react-table").Table<TData> }) {
+  const t = useTranslations("table");
   return (
     <Dropdown.Root>
       <Dropdown.Trigger asChild>
         <button className="filter-btn" style={{ borderStyle: "solid" }}>
           <SlidersHorizontal className="ic" />
-          View
+          {t("view")}
         </button>
       </Dropdown.Trigger>
       <Dropdown.Portal>
         <Dropdown.Content className="menu" align="end" sideOffset={6} style={{ minWidth: 180, zIndex: 50 }}>
           <Dropdown.Label className="muted" style={{ fontSize: 11, padding: "4px 8px" }}>
-            Toggle columns
+            {t("toggleColumns")}
           </Dropdown.Label>
           {table
             .getAllColumns()

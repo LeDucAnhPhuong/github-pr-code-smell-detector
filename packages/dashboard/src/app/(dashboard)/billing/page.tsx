@@ -2,11 +2,17 @@ import { auth } from "@/lib/auth";
 import { getSubscription, getUsage } from "@/lib/db/billing";
 import Link from "next/link";
 import { AlertTriangle, CreditCard, Gauge, GitBranch, BarChart } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 export default async function BillingPage() {
   const session = await auth();
   const userId = session!.user.id;
-  const [subscription, usage] = await Promise.all([getSubscription(userId), getUsage(userId)]);
+  const [subscription, usage, t, tSubStatus] = await Promise.all([
+    getSubscription(userId),
+    getUsage(userId),
+    getTranslations("billing"),
+    getTranslations("subscriptionStatus"),
+  ]);
 
   const planName = subscription?.plan.name ?? "Free";
   const repoLimit = subscription?.plan.repositoryLimit ?? 3;
@@ -18,7 +24,7 @@ export default async function BillingPage() {
 
   return (
     <div className="max-w-5xl mx-auto">
-      <h1 className="h1" style={{ marginBottom: 20 }}>Billing</h1>
+      <h1 className="h1" style={{ marginBottom: 20 }}>{t("title")}</h1>
 
       {/* Quota warning */}
       {isOverQuota && (
@@ -29,10 +35,14 @@ export default async function BillingPage() {
           <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "var(--color-warning)" }} />
           <div>
             <p className="text-sm font-medium" style={{ color: "var(--color-text-primary)" }}>
-              You have used {quotaPercent}% of your analysis quota.
+              {t("quotaWarning", { percent: quotaPercent })}
             </p>
             <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
-              <Link href="/billing/plans" className="underline" style={{ color: "var(--color-primary)" }}>Upgrade your plan</Link> to continue analyzing PRs.
+              {t.rich("quotaWarningCta", {
+                link: (chunks) => (
+                  <Link href="/billing/plans" className="underline" style={{ color: "var(--color-primary)" }}>{chunks}</Link>
+                ),
+              })}
             </p>
           </div>
         </div>
@@ -45,7 +55,7 @@ export default async function BillingPage() {
       >
         <div className="flex items-start justify-between mb-4">
           <div>
-            <div className="text-xs font-medium uppercase tracking-wide mb-1" style={{ color: "var(--color-text-muted)" }}>Current Plan</div>
+            <div className="text-xs font-medium uppercase tracking-wide mb-1" style={{ color: "var(--color-text-muted)" }}>{t("currentPlan")}</div>
             <div className="text-xl font-semibold" style={{ color: "var(--color-text-primary)" }}>{planName}</div>
             <span
               className="text-xs px-2 py-0.5 rounded mt-1 inline-block"
@@ -55,12 +65,12 @@ export default async function BillingPage() {
                 borderRadius: "var(--radius-badge)",
               }}
             >
-              {subscription?.status ?? "No subscription"}
+              {subscription ? tSubStatus(subscription.status) : t("noSubscription")}
             </span>
           </div>
           <div className="flex gap-2">
             <Link href="/billing/plans" className="btn btn-primary btn-sm">
-              Change plan
+              {t("changePlan")}
             </Link>
           </div>
         </div>
@@ -69,7 +79,7 @@ export default async function BillingPage() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <div className="flex justify-between text-xs mb-1" style={{ color: "var(--color-text-secondary)" }}>
-              <span>Analysis quota</span>
+              <span>{t("analysisQuota")}</span>
               <span>{analysisUsed} / {analysisQuota}</span>
             </div>
             <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-surface-muted)" }}>
@@ -84,7 +94,7 @@ export default async function BillingPage() {
           </div>
           <div>
             <div className="flex justify-between text-xs mb-1" style={{ color: "var(--color-text-secondary)" }}>
-              <span>Repositories</span>
+              <span>{t("repositories")}</span>
               <span>{repoUsed} / {repoLimit}</span>
             </div>
             <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "var(--color-surface-muted)" }}>
@@ -98,7 +108,7 @@ export default async function BillingPage() {
 
         {subscription?.renewalDate && (
           <p className="text-xs mt-3" style={{ color: "var(--color-text-muted)" }}>
-            Renews {new Date(subscription.renewalDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+            {t("renews", { date: new Date(subscription.renewalDate).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) })}
           </p>
         )}
       </div>
@@ -106,10 +116,10 @@ export default async function BillingPage() {
       {/* Usage cards */}
       <div className="grid grid-cols-4 gap-4">
         {[
-          { label: "Analyses this month", value: analysisUsed, icon: BarChart },
-          { label: "Repositories", value: repoUsed, icon: GitBranch },
-          { label: "Reports generated", value: usage?.reportCount ?? 0, icon: CreditCard },
-          { label: "Quota used", value: `${quotaPercent}%`, icon: Gauge },
+          { label: t("analysesThisMonth"), value: analysisUsed, icon: BarChart },
+          { label: t("repositories"), value: repoUsed, icon: GitBranch },
+          { label: t("reportsGenerated"), value: usage?.reportCount ?? 0, icon: CreditCard },
+          { label: t("quotaUsed"), value: `${quotaPercent}%`, icon: Gauge },
         ].map(({ label, value, icon: Icon }) => (
           <div
             key={label}
@@ -128,9 +138,9 @@ export default async function BillingPage() {
       {/* Navigation */}
       <div className="flex gap-3 mt-6">
         {[
-          { href: "/billing/plans", label: "View plans" },
-          { href: "/billing/subscription", label: "Subscription details" },
-          { href: "/billing/usage", label: "Usage history" },
+          { href: "/billing/plans", label: t("viewPlans") },
+          { href: "/billing/subscription", label: t("subscriptionDetails") },
+          { href: "/billing/usage", label: t("usageHistory") },
         ].map(({ href, label }) => (
           <Link key={href} href={href} className="btn btn-secondary btn-sm">
             {label}

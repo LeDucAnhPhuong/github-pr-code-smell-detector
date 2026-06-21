@@ -1,5 +1,6 @@
 import { auth, signIn } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import Image from "next/image";
 import { Shield, Github, AlertCircle } from "lucide-react";
 
@@ -8,7 +9,7 @@ interface LoginPageProps {
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const [session, params] = await Promise.all([auth(), searchParams]);
+  const [session, params, t] = await Promise.all([auth(), searchParams, getTranslations("login")]);
 
   if (session?.user) {
     redirect("/");
@@ -45,10 +46,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           className="text-xl font-semibold mb-2"
           style={{ color: "var(--color-text-primary)" }}
         >
-          Sign in to your account
+          {t("title")}
         </h1>
         <p className="text-sm mb-6" style={{ color: "var(--color-text-secondary)" }}>
-          Detect maintainability issues in Pull Request changes before merge.
+          {t("subtitle")}
         </p>
 
         {/* Error alert */}
@@ -64,10 +65,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <span>
               {error === "OAuthCallbackError" || error === "Callback"
-                ? "GitHub authorization failed. Please try again."
+                ? t("errorOAuth")
                 : error === "AccessDenied"
-                ? "Repository access permission is required to show connected repositories."
-                : "An error occurred during sign in. Please try again."}
+                ? t("errorAccessDenied")
+                : t("errorGeneric")}
             </span>
           </div>
         )}
@@ -81,13 +82,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         >
           <button type="submit" className="btn btn-primary" style={{ width: "100%", justifyContent: "center", height: 40 }}>
             <Github className="w-4 h-4" />
-            Continue with GitHub
+            {t("continueWithGithub")}
           </button>
         </form>
 
         {/* Secondary text */}
         <p className="text-xs mt-4 text-center" style={{ color: "var(--color-text-muted)" }}>
-          Uses GitHub OAuth. Repository access is limited to authorized repositories.
+          {t("oauthNote")}
         </p>
 
         {/* Security note */}
@@ -99,7 +100,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           }}
         >
           <Shield className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--color-success)" }} />
-          <span>No source code is uploaded to third-party services in MVP mode.</span>
+          <span>{t("securityNote")}</span>
         </div>
       </div>
     </div>

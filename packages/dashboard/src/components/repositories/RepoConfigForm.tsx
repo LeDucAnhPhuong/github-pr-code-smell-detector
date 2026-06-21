@@ -3,14 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Save, RotateCcw, CheckCircle } from "lucide-react";
-
-const NAV = [
-  { label: "General", href: "" },
-  { label: "Frameworks", href: "/frameworks" },
-  { label: "Rules", href: "/rules" },
-  { label: "Categories", href: "/categories" },
-];
 
 interface RepoConfigFormProps {
   repoId: string;
@@ -29,6 +23,13 @@ const DEFAULTS = {
 
 export function RepoConfigForm({ repoId, initialConfig }: RepoConfigFormProps) {
   const pathname = usePathname();
+  const t = useTranslations("repoConfig");
+  const NAV = [
+    { label: t("navGeneral"), href: "" },
+    { label: t("navFrameworks"), href: "/frameworks" },
+    { label: t("navRules"), href: "/rules" },
+    { label: t("navCategories"), href: "/categories" },
+  ];
   const [config, setConfig] = useState({
     includePaths: (initialConfig.includePaths as string) ?? DEFAULTS.includePaths,
     excludePaths: (initialConfig.excludePaths as string) ?? DEFAULTS.excludePaths,
@@ -89,22 +90,22 @@ export function RepoConfigForm({ repoId, initialConfig }: RepoConfigFormProps) {
       <div className="card">
         <div className="card-head">
           <div className="row" style={{ gap: 8 }}>
-            <h2 className="h2">General settings</h2>
+            <h2 className="h2">{t("generalSettings")}</h2>
             {saved && (
               <span className="status" style={{ color: "var(--ok-ink)" }}>
                 <CheckCircle className="w-3.5 h-3.5" />
-                Saved
+                {t("saved")}
               </span>
             )}
           </div>
           <div className="row" style={{ gap: 8 }}>
             <button onClick={() => setConfig({ ...DEFAULTS })} className="btn btn-secondary btn-sm">
               <RotateCcw className="w-3 h-3" />
-              Discard
+              {t("discard")}
             </button>
             <button onClick={handleSave} disabled={saving} className="btn btn-primary btn-sm" style={saving ? { opacity: 0.5 } : undefined}>
               <Save className="w-3 h-3" />
-              {saving ? "Saving…" : "Save configuration"}
+              {saving ? t("saving") : t("saveConfig")}
             </button>
           </div>
         </div>
@@ -113,11 +114,11 @@ export function RepoConfigForm({ repoId, initialConfig }: RepoConfigFormProps) {
           {/* Analysis scope */}
           <div>
             <p className="eyebrow" style={{ marginBottom: 10 }}>
-              Analysis scope
+              {t("analysisScope")}
             </p>
             <div className="stack" style={{ gap: 12 }}>
               <div>
-                <label className="field-label">Include paths</label>
+                <label className="field-label">{t("includePaths")}</label>
                 <input
                   className="input mono"
                   value={config.includePaths}
@@ -125,7 +126,7 @@ export function RepoConfigForm({ repoId, initialConfig }: RepoConfigFormProps) {
                 />
               </div>
               <div>
-                <label className="field-label">Exclude paths (comma-separated)</label>
+                <label className="field-label">{t("excludePaths")}</label>
                 <input
                   className="input mono"
                   value={config.excludePaths}
@@ -138,23 +139,23 @@ export function RepoConfigForm({ repoId, initialConfig }: RepoConfigFormProps) {
           {/* Behavior */}
           <div>
             <p className="eyebrow" style={{ marginBottom: 4 }}>
-              Behavior
+              {t("behavior")}
             </p>
-            <Toggle label="Analyze changed files only" field="analyzeChangedOnly" />
-            <Toggle label="Publish PR comment" field="publishPRComment" />
-            <Toggle label="Publish GitHub Check annotations" field="publishCheckAnnotations" />
-            <Toggle label="Warning-only mode (never block PR)" field="warningOnlyMode" />
+            <Toggle label={t("analyzeChangedOnly")} field="analyzeChangedOnly" />
+            <Toggle label={t("publishPRComment")} field="publishPRComment" />
+            <Toggle label={t("publishCheckAnnotations")} field="publishCheckAnnotations" />
+            <Toggle label={t("warningOnlyMode")} field="warningOnlyMode" />
           </div>
 
           {/* Duplicate feedback */}
           <div>
             <p className="eyebrow" style={{ marginBottom: 10 }}>
-              Duplicate feedback
+              {t("duplicateFeedback")}
             </p>
             <div className="stack" style={{ gap: 8 }}>
               {[
-                { value: "update", label: "Update existing PR comment" },
-                { value: "new", label: "Create new comment per run" },
+                { value: "update", label: t("dupUpdate") },
+                { value: "new", label: t("dupNew") },
               ].map(({ value, label }) => (
                 <label key={value} className="row" style={{ gap: 8, cursor: "pointer" }}>
                   <input

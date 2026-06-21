@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { SeverityBadge } from "@/components/findings/SeverityBadge";
 import { ExternalLink } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 export default async function FindingDetailPage({
   params,
@@ -19,22 +20,24 @@ export default async function FindingDetailPage({
   const pr = finding.prAnalysis.pullRequest;
   const githubFileUrl = `https://github.com/${repo.fullName}/blob/${pr.commitSha}/${finding.filePath}#L${finding.lineStart}`;
 
+  const t = await getTranslations("findingDetail");
+
   const meta: [string, React.ReactNode][] = [
-    ["Rule ID", <span key="rid" className="mono" style={{ fontSize: 12 }}>{finding.ruleId}</span>],
-    ["Category", finding.rule?.category?.name ?? "—"],
-    ["Framework", finding.rule?.framework?.name ?? "—"],
-    ["Analysis", finding.prAnalysisId.slice(0, 8) + "…"],
-    ["Commit SHA", <span key="sha" className="mono" style={{ fontSize: 12 }}>{pr.commitSha.slice(0, 8)}</span>],
+    [t("ruleId"), <span key="rid" className="mono" style={{ fontSize: 12 }}>{finding.ruleId}</span>],
+    [t("category"), finding.rule?.category?.name ?? "—"],
+    [t("framework"), finding.rule?.framework?.name ?? "—"],
+    [t("analysis"), finding.prAnalysisId.slice(0, 8) + "…"],
+    [t("commitSha"), <span key="sha" className="mono" style={{ fontSize: 12 }}>{pr.commitSha.slice(0, 8)}</span>],
   ];
 
   return (
     <div className="page-w">
       <Breadcrumb
         items={[
-          { label: "Repositories", href: "/repositories" },
+          { label: t("breadcrumbRepos"), href: "/repositories" },
           { label: repo.fullName, href: `/repositories/${repoId}` },
           { label: `#${pr.prNumber}`, href: `/repositories/${repoId}/pulls/${prId}` },
-          { label: "Findings", href: `/repositories/${repoId}/pulls/${prId}/findings` },
+          { label: t("breadcrumbFindings"), href: `/repositories/${repoId}/pulls/${prId}/findings` },
           { label: finding.ruleName },
         ]}
       />
@@ -71,7 +74,7 @@ export default async function FindingDetailPage({
             <div className="stack">
               <div>
                 <p className="eyebrow" style={{ marginBottom: 4 }}>
-                  What was detected
+                  {t("whatDetected")}
                 </p>
                 <p className="secondary" style={{ margin: 0, fontSize: 13 }}>
                   {finding.message}
@@ -80,7 +83,7 @@ export default async function FindingDetailPage({
               {finding.rule?.whyItMatters && (
                 <div>
                   <p className="eyebrow" style={{ marginBottom: 4 }}>
-                    Why it matters
+                    {t("whyItMatters")}
                   </p>
                   <p className="secondary" style={{ margin: 0, fontSize: 13 }}>
                     {finding.rule.whyItMatters}
@@ -90,7 +93,7 @@ export default async function FindingDetailPage({
               {finding.suggestion && (
                 <div>
                   <p className="eyebrow" style={{ marginBottom: 4 }}>
-                    Suggested refactor
+                    {t("suggestedRefactor")}
                   </p>
                   <p className="secondary" style={{ margin: 0, fontSize: 13 }}>
                     {finding.suggestion}
@@ -101,7 +104,7 @@ export default async function FindingDetailPage({
 
             <a href={githubFileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" style={{ width: "fit-content" }}>
               <ExternalLink className="w-3.5 h-3.5" />
-              Open file in GitHub
+              {t("openFileInGithub")}
             </a>
           </div>
         </div>
@@ -109,7 +112,7 @@ export default async function FindingDetailPage({
         {/* Right: code context */}
         <div className="card">
           <div className="card-head">
-            <h2 className="h2">Code context</h2>
+            <h2 className="h2">{t("codeContext")}</h2>
             <span className="code">{finding.filePath}</span>
           </div>
           <div className="card-body">
@@ -141,7 +144,7 @@ export default async function FindingDetailPage({
                 </span>
               </div>
               <p className="muted" style={{ marginTop: 16, fontSize: 12 }}>
-                Code context is fetched from GitHub at read time. Open the file in GitHub to see the full source.
+                {t("codeContextNote")}
               </p>
             </div>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Plus, X, Search, Github, AlertCircle } from "lucide-react";
 
 interface GithubRepo {
@@ -14,7 +15,8 @@ interface ConnectRepoModalProps {
   buttonLabel?: string;
 }
 
-export function ConnectRepoModal({ buttonLabel = "Connect repository" }: ConnectRepoModalProps) {
+export function ConnectRepoModal({ buttonLabel }: ConnectRepoModalProps) {
+  const t = useTranslations("connectRepo");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [repos, setRepos] = useState<GithubRepo[]>([]);
@@ -32,7 +34,7 @@ export function ConnectRepoModal({ buttonLabel = "Connect repository" }: Connect
       if (json.error) throw new Error(json.error.message);
       setRepos(json.data ?? []);
     } catch {
-      setError("Failed to load GitHub repositories. Check your GitHub permissions.");
+      setError(t("errorLoad"));
     } finally {
       setLoading(false);
     }
@@ -57,7 +59,7 @@ export function ConnectRepoModal({ buttonLabel = "Connect repository" }: Connect
       setSelected([]);
       window.location.reload();
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Failed to connect repository.");
+      setError(e instanceof Error ? e.message : t("errorConnect"));
     } finally {
       setConnecting(false);
     }
@@ -67,7 +69,7 @@ export function ConnectRepoModal({ buttonLabel = "Connect repository" }: Connect
     return (
       <button onClick={() => { setOpen(true); fetchRepos(""); }} className="btn btn-primary">
         <Plus className="w-4 h-4" />
-        {buttonLabel}
+        {buttonLabel ?? t("connectButton")}
       </button>
     );
   }
@@ -88,7 +90,7 @@ export function ConnectRepoModal({ buttonLabel = "Connect repository" }: Connect
           style={{ borderColor: "var(--color-border)" }}
         >
           <h2 className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
-            Connect Repository
+            {t("title")}
           </h2>
           <button
             onClick={() => setOpen(false)}
@@ -108,7 +110,7 @@ export function ConnectRepoModal({ buttonLabel = "Connect repository" }: Connect
             <Search className="w-4 h-4 shrink-0" style={{ color: "var(--color-text-muted)" }} />
             <input
               type="text"
-              placeholder="Search GitHub repositories…"
+              placeholder={t("searchPlaceholder")}
               value={search}
               onChange={(e) => { setSearch(e.target.value); fetchRepos(e.target.value); }}
               className="flex-1 bg-transparent text-sm outline-none"
@@ -135,11 +137,11 @@ export function ConnectRepoModal({ buttonLabel = "Connect repository" }: Connect
         >
           {loading ? (
             <div className="p-4 text-sm text-center" style={{ color: "var(--color-text-muted)" }}>
-              Loading…
+              {t("loading")}
             </div>
           ) : repos.length === 0 ? (
             <div className="p-4 text-sm text-center" style={{ color: "var(--color-text-muted)" }}>
-              No repositories found.
+              {t("noReposFound")}
             </div>
           ) : (
             repos.map((r) => (
@@ -164,7 +166,7 @@ export function ConnectRepoModal({ buttonLabel = "Connect repository" }: Connect
                   className="text-xs px-1.5 py-0.5 rounded"
                   style={{ backgroundColor: "var(--color-surface-muted)", color: "var(--color-text-muted)" }}
                 >
-                  {r.private ? "Private" : "Public"}
+                  {r.private ? t("private") : t("public")}
                 </span>
                 {r.language && (
                   <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
@@ -178,7 +180,7 @@ export function ConnectRepoModal({ buttonLabel = "Connect repository" }: Connect
 
         {/* Permission note */}
         <p className="px-5 text-xs" style={{ color: "var(--color-text-muted)" }}>
-          Repository access is scoped to your authorized GitHub permissions.
+          {t("permissionNote")}
         </p>
 
         {/* Footer */}
@@ -187,7 +189,7 @@ export function ConnectRepoModal({ buttonLabel = "Connect repository" }: Connect
           style={{ borderColor: "var(--color-border)" }}
         >
           <button onClick={() => setOpen(false)} className="btn btn-secondary btn-sm">
-            Cancel
+            {t("cancel")}
           </button>
           <button
             onClick={handleConnect}
@@ -195,7 +197,7 @@ export function ConnectRepoModal({ buttonLabel = "Connect repository" }: Connect
             className="btn btn-primary btn-sm"
             style={selected.length === 0 || connecting ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
           >
-            {connecting ? "Connecting…" : `Connect selected (${selected.length})`}
+            {connecting ? t("connecting") : t("connectSelected", { count: selected.length })}
           </button>
         </div>
       </div>
