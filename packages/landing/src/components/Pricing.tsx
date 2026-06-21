@@ -13,20 +13,20 @@ type Tier = {
 const tiers: Tier[] = [
   {
     name: "Free",
-    price: "$0",
+    price: "0₫",
     cadence: "forever",
     features: ["3 repositories", "30 analyses / month", "All 6 React checks"],
   },
   {
     name: "Pro",
-    price: "$9.99",
+    price: "199.000₫",
     cadence: "per month",
     highlight: true,
     features: ["25 repositories", "100 analyses / month", "Check annotations on PRs", "Historical reports"],
   },
   {
     name: "Team",
-    price: "$29.99",
+    price: "499.000₫",
     cadence: "per month",
     features: ["100 repositories", "1,000 analyses / month", "Everything in Pro"],
   },

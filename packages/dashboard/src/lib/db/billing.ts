@@ -64,3 +64,29 @@ export async function getAllPlans() {
     orderBy: { repositoryLimit: "asc" },
   });
 }
+
+function addMonths(date: Date, months: number): Date {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + months);
+  return d;
+}
+
+/**
+ * Activate or extend a user's subscription after a successful payment.
+ * Renewal extends from the later of (now, current renewalDate) so paying early
+ * stacks time rather than throwing it away. Idempotency is the caller's job
+ * (guarded by the SePay transaction id on the PaymentOrder).
+ */
+export async function activateSubscription(userId: string, planId: string, months = 1) {
+  const existing = await prisma.tenantSubscription.findUnique({ where: { userId } });
+  const now = new Date();
+  const base =
+    existing?.renewalDate && existing.renewalDate > now ? existing.renewalDate : now;
+  const renewalDate = addMonths(base, months);
+
+  return prisma.tenantSubscription.upsert({
+    where: { userId },
+    create: { userId, planId, status: "ACTIVE", startDate: now, renewalDate },
+    update: { planId, status: "ACTIVE", renewalDate, canceledAt: null },
+  });
+}
