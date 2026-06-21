@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Motion } from "@/components/Motion";
 
 // Same typeface as the dashboard — exposed as a CSS variable for globals.css.
 const inter = Inter({
@@ -33,12 +34,24 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <head>
+        {/* Add the motion class before first paint so globals.css can hide the
+            animated elements with no flash. Skipped when JS is off → content
+            stays visible (progressive enhancement). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('js-motion')}}catch(e){}",
+          }}
+        />
+      </head>
       <body>
         <a href="#main" className="lp-skip lp-btn lp-btn-primary">
           Skip to content
         </a>
         {children}
+        <Motion />
       </body>
     </html>
   );

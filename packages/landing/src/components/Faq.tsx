@@ -25,9 +25,9 @@ export function Faq() {
   return (
     <section id="faq" className="lp-section">
       <div className="lp-container">
-        <h2 className="lp-h2" style={{ maxWidth: "16ch" }}>Questions, answered.</h2>
+        <h2 className="lp-h2" style={{ maxWidth: "16ch" }} data-reveal>Questions, answered.</h2>
 
-        <dl className="lp-faq" style={{ marginTop: "clamp(2rem, 4vw, 3.5rem)" }}>
+        <dl className="lp-faq" style={{ marginTop: "clamp(2rem, 4vw, 3.5rem)" }} data-reveal-stagger>
           {faqs.map((f) => (
             <div key={f.q} className="lp-faq-item">
               <dt className="lp-h3" style={{ fontSize: "1.15rem" }}>{f.q}</dt>

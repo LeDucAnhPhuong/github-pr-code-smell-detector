@@ -22,11 +22,11 @@ export function HowItWorks() {
   return (
     <section id="how" className="lp-section lp-tex lp-tex-diag">
       <div className="lp-container">
-        <h2 className="lp-h2" style={{ maxWidth: "16ch" }}>
+        <h2 className="lp-h2" style={{ maxWidth: "16ch" }} data-reveal>
           From open to merge, in the same review you already run.
         </h2>
 
-        <div className="lp-steps" style={{ marginTop: "clamp(2.5rem, 5vw, 4rem)" }}>
+        <div className="lp-steps" style={{ marginTop: "clamp(2.5rem, 5vw, 4rem)" }} data-reveal-stagger>
           {steps.map(({ icon: Icon, title, body }) => (
             <div key={title} className="lp-step">
               <Icon size={26} strokeWidth={1.5} />

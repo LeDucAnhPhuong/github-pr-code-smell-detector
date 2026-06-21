@@ -21,3 +21,7 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# playwright visual-harness output / local logs
+/shots/
+*.log

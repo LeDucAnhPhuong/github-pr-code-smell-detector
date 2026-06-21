@@ -1,5 +1,5 @@
 import { Check } from "lucide-react";
-import { loginUrl } from "@/lib/site";
+import { loginUrl, plansUrl } from "@/lib/site";
 
 type Tier = {
   name: string;
@@ -9,8 +9,21 @@ type Tier = {
   highlight?: boolean;
 };
 
-// Values mirror the seeded subscription plans in the dashboard.
-const tiers: Tier[] = [
+// Shape returned by the dashboard's GET /api/plans.
+type ApiPlan = {
+  id: string;
+  name: string;
+  price: number;
+  repositoryLimit: number;
+  analysisQuota: number;
+  hasCheckAnnotations: boolean;
+  hasHistoricalReports: boolean;
+};
+
+// Fallback used only if the dashboard is unreachable at build/request time, so
+// the marketing page never ships an empty pricing table. Mirrors the seeded
+// plans; the live API is the source of truth.
+const fallbackTiers: Tier[] = [
   {
     name: "Free",
     price: "0₫",
@@ -32,16 +45,56 @@ const tiers: Tier[] = [
   },
 ];
 
-export function Pricing() {
+function planToTier(p: ApiPlan): Tier {
+  const isFree = p.price <= 0;
+  const features = [
+    `${p.repositoryLimit} repositories`,
+    `${p.analysisQuota.toLocaleString("en-US")} analyses / month`,
+  ];
+  if (isFree) features.push("All 6 React checks");
+  if (p.hasCheckAnnotations) features.push("Check annotations on PRs");
+  if (p.hasHistoricalReports) features.push("Historical reports");
+  return {
+    name: p.name,
+    price: isFree ? "0₫" : `${p.price.toLocaleString("vi-VN")}₫`,
+    cadence: isFree ? "forever" : "per month",
+    features,
+  };
+}
+
+async function getTiers(): Promise<Tier[]> {
+  try {
+    // Revalidate hourly; plans rarely change. Server-to-server fetch, no CORS.
+    const res = await fetch(plansUrl, { next: { revalidate: 3600 } });
+    if (!res.ok) throw new Error(`plans ${res.status}`);
+    const json = (await res.json()) as { data?: ApiPlan[] };
+    const plans = json.data;
+    if (!Array.isArray(plans) || plans.length === 0) throw new Error("no plans");
+
+    const tiers = plans.map(planToTier);
+    // Elevate the middle tier (the recommended one) to match the design.
+    const featured = tiers.length >= 3 ? Math.floor((tiers.length - 1) / 2) : tiers.length - 1;
+    if (tiers[featured]) tiers[featured].highlight = true;
+    return tiers;
+  } catch {
+    return fallbackTiers;
+  }
+}
+
+export async function Pricing() {
+  const tiers = await getTiers();
+
   return (
     <section id="pricing" className="lp-section">
       <div className="lp-container">
-        <p className="lp-eyebrow">Pricing</p>
-        <h2 className="lp-h2" style={{ marginTop: "1.25rem", maxWidth: "18ch" }}>
-          Start free. Grow when your team does.
-        </h2>
+        <div data-reveal>
+          <p className="lp-eyebrow">Pricing</p>
+          <h2 className="lp-h2" style={{ marginTop: "1.25rem", maxWidth: "18ch" }}>
+            Start free. Grow when your team does.
+          </h2>
+        </div>
 
-        <div className="lp-tiers" style={{ marginTop: "clamp(2.5rem, 5vw, 4rem)" }}>
+        <div className="lp-tiers" style={{ marginTop: "clamp(2.5rem, 5vw, 4rem)" }} data-reveal-stagger>
           {tiers.map((t) => (
             <div
               key={t.name}

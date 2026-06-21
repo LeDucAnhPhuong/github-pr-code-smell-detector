@@ -3,12 +3,12 @@ export function ProductDetail() {
     <section className="lp-section lp-tex lp-tex-grid">
       <div className="lp-container lp-detail-grid">
         <div>
-          <h2 className="lp-h2" style={{ maxWidth: "14ch" }}>
+          <h2 className="lp-h2" style={{ maxWidth: "14ch" }} data-reveal>
             Review the change, not the whole codebase.
           </h2>
         </div>
 
-        <div className="lp-prose">
+        <div className="lp-prose" data-reveal-stagger>
           <p className="lp-dropcap">
             Most static analysis tools grade your entire repository and bury a Pull Request under
             thousands of pre-existing warnings. MergeTrack does the opposite. It looks at the diff,
