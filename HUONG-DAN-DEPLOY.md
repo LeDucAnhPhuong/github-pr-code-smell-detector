@@ -50,7 +50,7 @@ docker compose -f docker-compose.prod.yml --env-file .env.production up -d --bui
 
 # 4. Seed dữ liệu nền (plans + rules + frameworks + categories) — chạy MỘT lần
 docker compose -f docker-compose.prod.yml --env-file .env.production \
-  run --rm migrate npm run db:seed -w packages/dashboard
+  run --rm migrate npm run db:seed -w packages/core
 ```
 
 Mở `https://<DOMAIN>` → lần đầu Traefik xin cert (mất vài giây). Đăng nhập GitHub.

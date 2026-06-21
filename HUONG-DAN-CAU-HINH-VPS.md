@@ -84,9 +84,14 @@ Cần đưa cả hai target lên VPS. Có 2 cách:
 
 ```bash
 # === TRÊN MÁY LOCAL (ở thư mục gốc monorepo) ===
-# Build 3 target thành 3 tag riêng
-docker build -t <registry>/csd-web:latest    --target runner .
+# Build 4 target thành 4 tag riêng (web, worker, admin, landing)
+# Web: nhúng link tới admin panel (sidebar) lúc BUILD
+docker build -t <registry>/csd-web:latest    --target runner \
+  --build-arg NEXT_PUBLIC_ADMIN_URL=https://admin.mergetrack.site .
 docker build -t <registry>/csd-worker:latest --target worker .
+# Admin: có login riêng; nhúng link "Mở Dashboard" lúc BUILD
+docker build -t <registry>/csd-admin:latest --target admin-runner \
+  --build-arg NEXT_PUBLIC_DASHBOARD_URL=https://app.mergetrack.site .
 # Landing: NEXT_PUBLIC_* được nhúng lúc BUILD nên phải truyền --build-arg
 docker build -t <registry>/csd-landing:latest --target landing-runner \
   --build-arg NEXT_PUBLIC_DASHBOARD_URL=https://app.mergetrack.site \
@@ -94,8 +99,14 @@ docker build -t <registry>/csd-landing:latest --target landing-runner \
 
 docker push <registry>/csd-web:latest
 docker push <registry>/csd-worker:latest
+docker push <registry>/csd-admin:latest
 docker push <registry>/csd-landing:latest
 ```
+
+> Lưu ý: ảnh push cho `docker-compose.deploy.yml` phải đúng namespace
+> `${REGISTRY}/${IMAGE_NAMESPACE}/admin:${IMAGE_TAG}` (giống web/worker/landing).
+> Admin cần **GitHub OAuth App riêng** (callback `https://admin.mergetrack.site/api/auth/callback/github`)
+> và DNS A record `admin.mergetrack.site` trỏ về IP VPS.
 
 ```bash
 # === TRÊN VPS ===
@@ -132,7 +143,7 @@ Phần thay đổi cho 3 service `migrate`, `web`, `worker`:
 ```yaml
   migrate:
     image: <registry>/csd-worker:latest   # hoặc csd-worker:latest nếu dùng Cách B
-    command: ["npm", "run", "db:deploy", "-w", "packages/dashboard"]
+    command: ["npm", "run", "db:deploy", "-w", "packages/core"]
     # ... (giữ nguyên environment / depends_on / networks như file gốc)
 
   web:
@@ -158,7 +169,7 @@ docker compose -f docker-compose.vps.yml --env-file .env.production up -d
 
 # 3. Seed dữ liệu nền — chạy MỘT lần đầu tiên
 docker compose -f docker-compose.vps.yml --env-file .env.production \
-  run --rm migrate npm run db:seed -w packages/dashboard
+  run --rm migrate npm run db:seed -w packages/core
 ```
 
 > ⚠️ Vì bạn không clone source lên VPS, hãy chuẩn bị sẵn `docker-compose.vps.yml` và

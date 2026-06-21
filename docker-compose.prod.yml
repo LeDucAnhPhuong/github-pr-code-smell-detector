@@ -71,7 +71,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    command: ["npm", "run", "db:deploy", "-w", "packages/dashboard"]
+    command: ["npm", "run", "db:deploy", "-w", "packages/core"]
     environment:
       DATABASE_URL: ${DATABASE_URL}
     depends_on:
@@ -86,6 +86,9 @@ services:
       context: .
       dockerfile: Dockerfile
       target: runner
+      args:
+        # Inlined at build time → dashboard's "Admin panel" link points to admin host.
+        NEXT_PUBLIC_ADMIN_URL: https://${ADMIN_DOMAIN}
     restart: unless-stopped
     environment:
       NODE_ENV: production
@@ -105,6 +108,11 @@ services:
       GITHUB_APP_CLIENT_SECRET: ${GITHUB_APP_CLIENT_SECRET}
       GITHUB_APP_WEBHOOK_SECRET: ${GITHUB_APP_WEBHOOK_SECRET}
       GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
+      # SePay (VietQR bank-transfer payments)
+      SEPAY_WEBHOOK_API_KEY: ${SEPAY_WEBHOOK_API_KEY}
+      SEPAY_BANK_ACCOUNT: ${SEPAY_BANK_ACCOUNT}
+      SEPAY_BANK_CODE: ${SEPAY_BANK_CODE}
+      SEPAY_ACCOUNT_NAME: ${SEPAY_ACCOUNT_NAME}
     depends_on:
       postgres:
         condition: service_healthy
@@ -120,6 +128,44 @@ services:
       - traefik.http.routers.web.tls=true
       - traefik.http.routers.web.tls.certresolver=le
       - traefik.http.services.web.loadbalancer.server.port=3000
+    networks:
+      - edge
+      - internal
+
+  # ── Admin panel at ${ADMIN_DOMAIN} (e.g. admin.mergetrack.site).
+  #   Has its OWN GitHub login → needs a separate GitHub OAuth App with callback
+  #   https://${ADMIN_DOMAIN}/api/auth/callback/github. Shares the same DB/users.
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: admin-runner
+      args:
+        # Inlined at build time → admin's "Mở Dashboard" link points to the dashboard host.
+        NEXT_PUBLIC_DASHBOARD_URL: https://${DOMAIN}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      AUTH_URL: https://${ADMIN_DOMAIN}
+      AUTH_TRUST_HOST: "true"
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      AUTH_SECRET: ${NEXTAUTH_SECRET}
+      AUTH_GITHUB_ID: ${ADMIN_AUTH_GITHUB_ID}
+      AUTH_GITHUB_SECRET: ${ADMIN_AUTH_GITHUB_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=csd-prod_edge
+      - traefik.http.routers.admin.rule=Host(`${ADMIN_DOMAIN}`)
+      - traefik.http.routers.admin.entrypoints=websecure
+      - traefik.http.routers.admin.tls=true
+      - traefik.http.routers.admin.tls.certresolver=le
+      - traefik.http.services.admin.loadbalancer.server.port=3000
     networks:
       - edge
       - internal

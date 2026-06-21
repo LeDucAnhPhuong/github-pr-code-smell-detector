@@ -51,7 +51,7 @@ services:
   # One-shot: apply Prisma migrations, then exit. web/worker wait for success.
   migrate:
     image: ${REGISTRY}/${IMAGE_NAMESPACE}/worker:${IMAGE_TAG}
-    command: ["npm", "run", "db:deploy", "-w", "packages/dashboard"]
+    command: ["npm", "run", "db:deploy", "-w", "packages/core"]
     environment:
       DATABASE_URL: ${DATABASE_URL}
     depends_on:
@@ -81,6 +81,11 @@ services:
       GITHUB_APP_CLIENT_SECRET: ${GITHUB_APP_CLIENT_SECRET}
       GITHUB_APP_WEBHOOK_SECRET: ${GITHUB_APP_WEBHOOK_SECRET}
       GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
+      # SePay (VietQR bank-transfer payments)
+      SEPAY_WEBHOOK_API_KEY: ${SEPAY_WEBHOOK_API_KEY}
+      SEPAY_BANK_ACCOUNT: ${SEPAY_BANK_ACCOUNT}
+      SEPAY_BANK_CODE: ${SEPAY_BANK_CODE}
+      SEPAY_ACCOUNT_NAME: ${SEPAY_ACCOUNT_NAME}
     depends_on:
       postgres:
         condition: service_healthy
@@ -120,6 +125,44 @@ services:
       - traefik.http.services.mergetrack-landing.loadbalancer.server.port=3000
     networks:
       - treklink-edge
+
+  # ── Admin panel at ${ADMIN_DOMAIN} (e.g. admin.mergetrack.site).
+  #   Own GitHub OAuth App (callback https://${ADMIN_DOMAIN}/api/auth/callback/github).
+  #   NEXT_PUBLIC_DASHBOARD_URL is inlined at BUILD time → build & push from dev:
+  #     docker build --target admin-runner --platform linux/amd64 \
+  #       --build-arg NEXT_PUBLIC_DASHBOARD_URL=https://app.mergetrack.site \
+  #       -t $REGISTRY/$IMAGE_NAMESPACE/admin:$TAG .
+  #     docker push $REGISTRY/$IMAGE_NAMESPACE/admin:$TAG
+  admin:
+    image: ${REGISTRY}/${IMAGE_NAMESPACE}/admin:${IMAGE_TAG}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      # Auth.js v5 behind the shared Traefik proxy (admin's own host).
+      AUTH_URL: https://${ADMIN_DOMAIN}
+      AUTH_TRUST_HOST: "true"
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      AUTH_SECRET: ${NEXTAUTH_SECRET}
+      # Admin's OWN GitHub OAuth App (separate from the dashboard's).
+      AUTH_GITHUB_ID: ${ADMIN_AUTH_GITHUB_ID}
+      AUTH_GITHUB_SECRET: ${ADMIN_AUTH_GITHUB_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    # Unique router/service names so they never collide with other stacks.
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=treklink-edge
+      - traefik.http.routers.mergetrack-admin.rule=Host(`${ADMIN_DOMAIN}`)
+      - traefik.http.routers.mergetrack-admin.entrypoints=websecure
+      - traefik.http.routers.mergetrack-admin.tls.certresolver=letsencrypt
+      - traefik.http.services.mergetrack-admin.loadbalancer.server.port=3000
+    networks:
+      - treklink-edge
+      - internal
 
   worker:
     image: ${REGISTRY}/${IMAGE_NAMESPACE}/worker:${IMAGE_TAG}

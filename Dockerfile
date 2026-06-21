@@ -23,7 +23,9 @@ FROM base AS builder
 # Copy manifests first so `npm ci` is cached until dependencies change.
 COPY package.json package-lock.json ./
 COPY packages/analyzer/package.json packages/analyzer/package.json
+COPY packages/core/package.json packages/core/package.json
 COPY packages/dashboard/package.json packages/dashboard/package.json
+COPY packages/admin/package.json packages/admin/package.json
 COPY packages/landing/package.json packages/landing/package.json
 # Full install (incl. workspace-local node_modules where npm chose not to hoist,
 # e.g. analyzer's `shx`). Dev deps are needed to build.
@@ -34,11 +36,15 @@ COPY . .
 # They default to empty (→ the landing's localhost fallbacks) for local builds.
 ARG NEXT_PUBLIC_DASHBOARD_URL=""
 ARG NEXT_PUBLIC_SITE_URL=""
+ARG NEXT_PUBLIC_ADMIN_URL=""
 ENV NEXT_PUBLIC_DASHBOARD_URL=${NEXT_PUBLIC_DASHBOARD_URL}
 ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+ENV NEXT_PUBLIC_ADMIN_URL=${NEXT_PUBLIC_ADMIN_URL}
+# Prisma schema/client now live in packages/core (shared by dashboard + admin).
 RUN npm run build -w packages/analyzer \
- && npm run db:generate -w packages/dashboard \
+ && npm run db:generate -w packages/core \
  && npm run build -w packages/dashboard \
+ && npm run build -w packages/admin \
  && npm run build -w packages/landing
 
 # ─── runner: minimal runtime for the web dashboard ──────────────────────────
@@ -77,11 +83,31 @@ EXPOSE 3000
 # Standalone entry sits at packages/landing/server.js when tracing root = repo root.
 CMD ["node", "packages/landing/server.js"]
 
+# ─── admin-runner: minimal runtime for the admin panel (own GitHub login) ────
+# Admin queries the DB (server components + API routes), so it ships the Prisma
+# client just like the dashboard runner.
+FROM base AS admin-runner
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+
+COPY --from=builder /app/packages/admin/.next/standalone ./
+COPY --from=builder /app/packages/admin/.next/static ./packages/admin/.next/static
+COPY --from=builder /app/packages/admin/public ./packages/admin/public
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma/client ./node_modules/@prisma/client
+
+USER nextjs
+EXPOSE 3000
+# Standalone entry sits at packages/admin/server.js when tracing root = repo root.
+CMD ["node", "packages/admin/server.js"]
+
 # ─── worker: full image for the BullMQ worker AND prisma migrate deploy ──────
 # Reuses the builder's full node_modules + compiled analyzer + Prisma client.
 FROM base AS worker
 ENV NODE_ENV=production
 COPY --from=builder /app ./
 # Default command runs the analysis worker; the `migrate` compose service
-# overrides this with `npm run db:deploy -w packages/dashboard`.
+# overrides this with `npm run db:deploy -w packages/core`.
 CMD ["npm", "run", "worker", "-w", "packages/dashboard"]
