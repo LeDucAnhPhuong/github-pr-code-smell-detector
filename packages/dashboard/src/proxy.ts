@@ -11,7 +11,9 @@ export default auth((req) => {
   const isDashboardRoute =
     !nextUrl.pathname.startsWith("/login") &&
     !nextUrl.pathname.startsWith("/api/auth") &&
-    !nextUrl.pathname.startsWith("/api/webhooks");
+    !nextUrl.pathname.startsWith("/api/webhooks") &&
+    // Public plan catalogue, read by the marketing landing site.
+    !nextUrl.pathname.startsWith("/api/plans");
 
   // Dashboard routes: require authentication
   if (isDashboardRoute && !isLoggedIn) {
