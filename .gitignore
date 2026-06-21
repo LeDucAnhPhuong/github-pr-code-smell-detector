@@ -9,6 +9,9 @@
 **/.next
 oclif.manifest.json
 
+# TypeScript incremental build artifacts
+*.tsbuildinfo
+
 # Local env & secrets — never commit real env files; keep the *.example templates.
 .env
 .env.*
