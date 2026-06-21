@@ -16,15 +16,20 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const installationId = Number(url.searchParams.get("installation_id"));
 
+  // Behind the Traefik proxy, req.url resolves to the internal bind address
+  // (0.0.0.0:3000), so url.origin would build broken redirects. Use the public
+  // base URL from AUTH_URL, falling back to the request origin for local dev.
+  const base = process.env.AUTH_URL || url.origin;
+
   const session = await auth();
   if (!session?.user?.id) {
     // Not signed in — send to login, then back here.
     const back = encodeURIComponent(url.pathname + url.search);
-    return NextResponse.redirect(new URL(`/login?callbackUrl=${back}`, url.origin));
+    return NextResponse.redirect(new URL(`/login?callbackUrl=${back}`, base));
   }
 
   if (!installationId) {
-    return NextResponse.redirect(new URL("/repositories?error=missing_installation", url.origin));
+    return NextResponse.redirect(new URL("/repositories?error=missing_installation", base));
   }
 
   try {
@@ -65,8 +70,8 @@ export async function GET(req: Request) {
     });
     await connectInstallationRepos(session.user.id, installationId, repos);
 
-    return NextResponse.redirect(new URL("/repositories?installed=1", url.origin));
+    return NextResponse.redirect(new URL("/repositories?installed=1", base));
   } catch {
-    return NextResponse.redirect(new URL("/repositories?error=setup_failed", url.origin));
+    return NextResponse.redirect(new URL("/repositories?error=setup_failed", base));
   }
 }
