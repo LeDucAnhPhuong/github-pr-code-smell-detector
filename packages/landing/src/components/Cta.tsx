@@ -4,7 +4,7 @@ import { loginUrl } from "@/lib/site";
 export function Cta() {
   return (
     <section className="lp-invert lp-tex lp-tex-radial lp-section">
-      <div className="lp-container" style={{ textAlign: "center" }}>
+      <div className="lp-container" style={{ textAlign: "center" }} data-reveal-stagger>
         <h2 className="lp-display" style={{ fontSize: "clamp(2.5rem, 7vw, 6rem)", margin: "0 auto", maxWidth: "16ch" }}>
           Keep the smells out of main.
         </h2>

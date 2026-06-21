@@ -11,7 +11,7 @@ export function Checks() {
   return (
     <section id="features" className="lp-section">
       <div className="lp-container lp-checks-grid">
-        <div className="lp-checks-head">
+        <div className="lp-checks-head" data-reveal>
           <p className="lp-eyebrow">The checks</p>
           <h2 className="lp-h2" style={{ marginTop: "1.25rem" }}>
             Six React maintainability checks, tuned for review.
@@ -22,7 +22,7 @@ export function Checks() {
           </p>
         </div>
 
-        <ul className="lp-checks-list">
+        <ul className="lp-checks-list" data-reveal-stagger>
           {checks.map((c) => (
             <li key={c.title} className="lp-card lp-card-hover lp-check-row">
               <h3 className="lp-h3" style={{ fontSize: "1.1rem" }}>{c.title}</h3>

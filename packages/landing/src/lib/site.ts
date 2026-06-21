@@ -4,6 +4,9 @@ export const dashboardUrl =
 
 export const loginUrl = `${dashboardUrl}/login`;
 
+// Public plans catalogue served by the dashboard; keeps pricing in sync.
+export const plansUrl = `${dashboardUrl}/api/plans`;
+
 export const navLinks = [
   { href: "#how", label: "How it works" },
   { href: "#features", label: "Checks" },

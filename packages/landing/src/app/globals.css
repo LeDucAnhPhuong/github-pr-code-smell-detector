@@ -103,6 +103,16 @@ a, button, input, textarea, img, .lp-card, .lp-btn, .lp-square, .lp-chip { borde
   font-size: clamp(2.75rem, 9vw, 8rem);
   margin: 0;
 }
+/* Hero headline: contained so the lead + CTAs stay above the fold. Still
+   oversized per the design language, but tuned to land in ~2-3 lines inside
+   the asymmetric column instead of overflowing the viewport. */
+.lp-hero-display {
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+  font-size: clamp(2.5rem, 5.2vw, 4.25rem);
+  margin: 0;
+}
 .lp-h2 {
   font-weight: 600;
   letter-spacing: -0.025em;
@@ -191,6 +201,43 @@ a, button, input, textarea, img, .lp-card, .lp-btn, .lp-square, .lp-chip { borde
 .lp-chip-high { background: var(--sev-high-bg); color: var(--sev-high-ink); border-color: var(--sev-high-bd); }
 .lp-chip-med  { background: var(--sev-med-bg);  color: var(--sev-med-ink);  border-color: var(--sev-med-bd); }
 .lp-chip-low  { background: var(--sev-low-bg);  color: var(--sev-low-ink);  border-color: var(--sev-low-bd); }
+
+/* ── findings card: severity as a compact tag (dot + mono label) ──────────── */
+.lp-sev {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: var(--font-mono); font-variant-ligatures: none;
+  font-size: 0.66rem; font-weight: 600; line-height: 1;
+  letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+  padding: 0.32rem 0.5rem; border: 1px solid;
+}
+.lp-sev-dot { width: 6px; height: 6px; flex: none; }
+.lp-sev-high { background: var(--sev-high-bg); color: var(--sev-high-ink); border-color: var(--sev-high-bd); }
+.lp-sev-med  { background: var(--sev-med-bg);  color: var(--sev-med-ink);  border-color: var(--sev-med-bd); }
+.lp-sev-low  { background: var(--sev-low-bg);  color: var(--sev-low-ink);  border-color: var(--sev-low-bd); }
+.lp-sev-high .lp-sev-dot { background: var(--sev-high-ink); }
+.lp-sev-med  .lp-sev-dot { background: var(--sev-med-ink); }
+.lp-sev-low  .lp-sev-dot { background: var(--sev-low-ink); }
+
+.lp-find-head {
+  display: flex; align-items: center; gap: 0.55rem;
+  padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--border);
+}
+.lp-find-row {
+  display: grid; grid-template-columns: auto 1fr; gap: 0.85rem; align-items: start;
+  padding: 0.95rem 1.1rem; transition: background .1s linear;
+}
+.lp-find-row + .lp-find-row { border-top: 1px solid var(--border); }
+.lp-find-row:hover { background: var(--bg-subtle); }
+.lp-find-msg { margin: 0; font-size: 0.9rem; line-height: 1.5; color: var(--ink); }
+.lp-find-loc { margin: 0.3rem 0 0; font-size: 0.72rem; color: var(--ink-3); }
+.lp-find-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.7rem 1.1rem; border-top: 1px solid var(--border); background: var(--bg-subtle);
+  font-size: 0.72rem; color: var(--ink-3);
+}
+.lp-find-tally { display: inline-flex; align-items: center; gap: 0.7rem; }
+.lp-find-tally span { display: inline-flex; align-items: center; gap: 0.3rem; }
+.lp-find-tally i { width: 6px; height: 6px; display: inline-block; }
 
 /* ── textures (subtle, fixed-cost, never on scroll containers) ───────────── */
 .lp-tex { position: relative; isolation: isolate; }
@@ -294,8 +341,24 @@ a, button, input, textarea, img, .lp-card, .lp-btn, .lp-square, .lp-chip { borde
   .lp-sign-in { display: inline; }
 }
 
+/* ── GSAP entrance hooks ──────────────────────────────────────────────────
+   When JS + motion are on, the inline head script adds `js-motion` before
+   first paint. These rules pre-hide the elements GSAP will reveal so there is
+   no flash of fully-rendered content. Without JS (or with reduced motion) the
+   class is never added and everything renders normally. */
+.js-motion [data-hero],
+.js-motion [data-reveal],
+.js-motion [data-reveal-stagger] > * {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
 /* ── reduced motion: keep state changes instant, no transition flicker ───── */
 @media (prefers-reduced-motion: reduce) {
   * { transition-duration: 0.01ms !important; }
   .lp-btn:active { transform: none; }
+  /* Belt-and-braces: never leave content hidden for reduced-motion users. */
+  .js-motion [data-hero],
+  .js-motion [data-reveal],
+  .js-motion [data-reveal-stagger] > * { opacity: 1; }
 }
