@@ -1,0 +1,404 @@
+// This is your Prisma schema file — 13 entities for GitHub PR Code Smell Detector
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum PRState {
+  OPEN
+  MERGED
+  CLOSED
+}
+
+enum AnalysisStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum FileStatus {
+  ANALYZED
+  SKIPPED
+  DIAGNOSTIC
+}
+
+enum Severity {
+  error
+  warning
+  info
+}
+
+enum FindingStatus {
+  OPEN
+  REVIEWED
+  IGNORED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELED
+  PAYMENT_FAILED
+}
+
+enum ReportStatus {
+  DRAFT
+  PUBLISHED
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  EXPIRED
+  FAILED
+}
+
+// ─── Auth.js v5 required models ───────────────────────────────────────────────
+
+// 1. users
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts            Account[]
+  sessions            Session[]
+  repositories        Repository[]
+  subscription        TenantSubscription?
+  subscriptionUsages  SubscriptionUsage[]
+  installations       GithubInstallation[]
+  payments            PaymentOrder[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Domain models ─────────────────────────────────────────────────────────────
+
+// 2. repositories
+model Repository {
+  id             String   @id @default(cuid())
+  userId         String
+  githubId       Int      @unique
+  owner          String
+  name           String
+  fullName       String
+  defaultBranch  String   @default("main")
+  isPrivate      Boolean  @default(false)
+  language       String?
+  webhookId      Int?
+  webhookSecret  String?
+  installationId Int?
+  config         Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pullRequests PullRequest[]
+
+  @@unique([userId, fullName])
+  @@index([userId])
+  @@index([installationId])
+}
+
+// 3. pull_requests
+model PullRequest {
+  id           String   @id @default(cuid())
+  repositoryId String
+  prNumber     Int
+  title        String
+  body         String?  @db.Text
+  state        PRState  @default(OPEN)
+  author       String
+  sourceBranch String
+  targetBranch String
+  commitSha    String
+  githubUrl    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  repository Repository  @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  analyses   PrAnalysis[]
+
+  @@unique([repositoryId, prNumber])
+  @@index([repositoryId])
+}
+
+// 4. pr_analyses
+model PrAnalysis {
+  id                String         @id @default(cuid())
+  pullRequestId     String
+  status            AnalysisStatus @default(PENDING)
+  commitSha         String
+  runtimeMs         Int?
+  diagnosticMessage String?        @db.Text
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  pullRequest      PullRequest       @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+  changedFiles     ChangedFile[]
+  findings         Finding[]
+  evaluationResult EvaluationResult?
+  analysisReport   AnalysisReport?
+
+  @@index([pullRequestId])
+}
+
+// 5. changed_files
+model ChangedFile {
+  id            String     @id @default(cuid())
+  prAnalysisId  String
+  filePath      String
+  fileType      String?
+  status        FileStatus @default(ANALYZED)
+  additions     Int        @default(0)
+  deletions     Int        @default(0)
+  findingsCount Int        @default(0)
+  parserResult  String?
+  createdAt     DateTime   @default(now())
+
+  prAnalysis PrAnalysis @relation(fields: [prAnalysisId], references: [id], onDelete: Cascade)
+
+  @@index([prAnalysisId])
+}
+
+// 6. findings
+model Finding {
+  id           String        @id @default(cuid())
+  prAnalysisId String
+  ruleId       String
+  ruleName     String
+  severity     Severity
+  filePath     String
+  lineStart    Int
+  lineEnd      Int?
+  columnStart  Int?
+  message      String        @db.Text
+  suggestion   String?       @db.Text
+  status       FindingStatus @default(OPEN)
+  reviewedAt   DateTime?
+  createdAt    DateTime      @default(now())
+
+  prAnalysis PrAnalysis @relation(fields: [prAnalysisId], references: [id], onDelete: Cascade)
+  rule       Rule?      @relation(fields: [ruleId], references: [id])
+
+  @@index([prAnalysisId])
+  @@index([ruleId])
+}
+
+// 7. rules (admin-managed, global — no userId)
+model Rule {
+  id               String   @id
+  name             String
+  description      String   @db.Text
+  whyItMatters     String   @db.Text
+  frameworkId      String
+  categoryId       String
+  defaultSeverity  Severity @default(warning)
+  defaultThreshold Int?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  framework Framework @relation(fields: [frameworkId], references: [id])
+  category  Category  @relation(fields: [categoryId], references: [id])
+  findings  Finding[]
+}
+
+// 8. categories (admin-managed, global — no userId)
+model Category {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  description     String?  @db.Text
+  defaultSeverity Severity @default(warning)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  rules Rule[]
+}
+
+// 9. frameworks (admin-managed, global — no userId)
+model Framework {
+  id                  String   @id @default(cuid())
+  name                String   @unique
+  supportedExtensions String[]
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  rules Rule[]
+}
+
+// 10. evaluation_results
+model EvaluationResult {
+  id               String   @id @default(cuid())
+  prAnalysisId     String   @unique
+  runtimeMs        Int
+  filesAnalyzed    Int
+  filesSkipped     Int
+  rulesEvaluated   Int
+  findingsCount    Int
+  diagnosticsCount Int      @default(0)
+  ruleBreakdown    Json?
+  runtimeBreakdown Json?
+  createdAt        DateTime @default(now())
+
+  prAnalysis PrAnalysis @relation(fields: [prAnalysisId], references: [id], onDelete: Cascade)
+}
+
+// 11. analysis_reports
+model AnalysisReport {
+  id           String       @id @default(cuid())
+  prAnalysisId String       @unique
+  content      String       @db.Text
+  status       ReportStatus @default(DRAFT)
+  publishedAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  prAnalysis PrAnalysis @relation(fields: [prAnalysisId], references: [id], onDelete: Cascade)
+}
+
+// 12. tenant_subscriptions
+model TenantSubscription {
+  id           String             @id @default(cuid())
+  userId       String             @unique
+  planId       String
+  status       SubscriptionStatus @default(ACTIVE)
+  startDate    DateTime           @default(now())
+  renewalDate  DateTime?
+  billingOwner String?
+  canceledAt   DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan SubscriptionPlan @relation(fields: [planId], references: [id])
+}
+
+// 13. subscription_plans (admin-managed, global)
+model SubscriptionPlan {
+  id                   String   @id @default(cuid())
+  name                 String   @unique
+  price                Decimal  @default(0) @db.Decimal(10, 2)
+  repositoryLimit      Int
+  analysisQuota        Int
+  hasCheckAnnotations  Boolean  @default(false)
+  hasHistoricalReports Boolean  @default(false)
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  subscriptions TenantSubscription[]
+  payments      PaymentOrder[]
+}
+
+// 14. subscription_usage
+model SubscriptionUsage {
+  id              String   @id @default(cuid())
+  userId          String
+  month           Int
+  analysisCount   Int      @default(0)
+  repositoryCount Int      @default(0)
+  reportCount     Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, month])
+  @@index([userId])
+}
+
+// 15. github_installations — one per GitHub App install on an account/org
+model GithubInstallation {
+  id             String    @id @default(cuid())
+  installationId Int       @unique
+  accountLogin   String
+  accountType    String    @default("User") // "User" | "Organization"
+  userId         String?
+  suspendedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
+
+// 16. payment_orders — one-time SePay (VietQR bank transfer) payment for a plan
+model PaymentOrder {
+  id        String        @id @default(cuid())
+  userId    String
+  planId    String
+  amount    Int // VND, whole dong
+  code      String        @unique // transfer memo / nội dung chuyển khoản
+  status    PaymentStatus @default(PENDING)
+  months    Int           @default(1) // billing periods this payment grants
+  sepayTxId Int?          @unique // SePay transaction id — idempotency guard
+  gateway   String? // bank gateway reported by SePay
+  paidAt    DateTime?
+  expiresAt DateTime
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  @@index([userId])
+  @@index([status])
+}
