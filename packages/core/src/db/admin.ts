@@ -71,6 +71,7 @@ export async function updatePlan(id: string, data: Partial<{
   price: number;
   repositoryLimit: number;
   analysisQuota: number;
+  tokenQuota: number;
   hasCheckAnnotations: boolean;
   hasHistoricalReports: boolean;
   isActive: boolean;
@@ -135,6 +136,7 @@ export async function createPlan(data: {
   price: number;
   repositoryLimit: number;
   analysisQuota: number;
+  tokenQuota?: number;
   hasCheckAnnotations?: boolean;
   hasHistoricalReports?: boolean;
   isActive?: boolean;

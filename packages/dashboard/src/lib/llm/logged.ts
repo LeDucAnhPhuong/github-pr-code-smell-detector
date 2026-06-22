@@ -38,12 +38,13 @@ export interface LlmLogCtx {
 }
 
 /** Build a log callback that persists to LlmCallLog and never throws. */
-export function createLlmCallLogger(prisma: PrismaClient, repositoryId?: string): LlmLogFn {
+export function createLlmCallLogger(prisma: PrismaClient, repositoryId?: string, userId?: string): LlmLogFn {
   return async (entry) => {
     try {
       await prisma.llmCallLog.create({
         data: {
           repositoryId: entry.repositoryId ?? repositoryId ?? null,
+          userId: userId ?? null,
           purpose: entry.purpose,
           model: entry.model,
           promptTokens: entry.promptTokens,

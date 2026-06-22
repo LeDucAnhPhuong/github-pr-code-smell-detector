@@ -10,12 +10,13 @@ async function main() {
   // Prices are in VND (whole dong). Editable later in Admin → Plans.
   const freePlan = await prisma.subscriptionPlan.upsert({
     where: { name: "Free" },
-    update: { price: 0 },
+    update: { price: 0, tokenQuota: 4_000_000 },
     create: {
       name: "Free",
       price: 0,
       repositoryLimit: 3,
       analysisQuota: 30,
+      tokenQuota: 4_000_000,
       hasCheckAnnotations: false,
       hasHistoricalReports: false,
     },
@@ -23,12 +24,13 @@ async function main() {
 
   const proPlan = await prisma.subscriptionPlan.upsert({
     where: { name: "Pro" },
-    update: { price: 199000 },
+    update: { price: 199000, tokenQuota: 30_000_000 },
     create: {
       name: "Pro",
       price: 199000,
       repositoryLimit: 25,
       analysisQuota: 100,
+      tokenQuota: 30_000_000,
       hasCheckAnnotations: true,
       hasHistoricalReports: true,
     },
@@ -36,12 +38,13 @@ async function main() {
 
   await prisma.subscriptionPlan.upsert({
     where: { name: "Team" },
-    update: { price: 499000 },
+    update: { price: 499000, tokenQuota: 300_000_000 },
     create: {
       name: "Team",
       price: 499000,
       repositoryLimit: 100,
       analysisQuota: 1000,
+      tokenQuota: 300_000_000,
       hasCheckAnnotations: true,
       hasHistoricalReports: true,
     },

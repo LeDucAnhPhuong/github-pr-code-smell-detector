@@ -27,6 +27,7 @@ import {
 import { LlmError, type LlmUsage } from "../../src/lib/llm/openrouter";
 import { callLlmLogged, callLlmJsonLogged, createLlmCallLogger } from "../../src/lib/llm/logged";
 import { enqueueAnalysis } from "../../src/lib/queue";
+import { isWithinTokenBudget } from "../../src/lib/billing/token-budget";
 
 const MAP_CONCURRENCY = Number(process.env.OVERVIEW_MAP_CONCURRENCY ?? 4);
 const FETCH_CONCURRENCY = Number(process.env.OVERVIEW_FETCH_CONCURRENCY ?? 8);
@@ -89,6 +90,25 @@ export async function overviewProcessor(job: Job<OverviewJob>) {
     }
     hadReadyOverview = current?.status === "READY" && Boolean(current.summaryMd);
 
+    // Token budget gate (plan 09): if the user is out of monthly tokens, don't
+    // spend on indexing. Re-index → skip (keep old). First index → unrecoverable.
+    const sub = await prisma.tenantSubscription.findUnique({
+      where: { userId: repo.userId },
+      include: { plan: true },
+    });
+    if (sub && sub.status === "ACTIVE") {
+      const month = new Date().getFullYear() * 100 + (new Date().getMonth() + 1);
+      const monthUsage = await prisma.subscriptionUsage.findUnique({
+        where: { userId_month: { userId: repo.userId, month } },
+      });
+      if (!isWithinTokenBudget(monthUsage?.tokenUsed ?? 0, sub.plan.tokenQuota)) {
+        if (hadReadyOverview) {
+          return { skipped: true, reason: "token budget exceeded" };
+        }
+        throw new LlmError("Monthly token budget exceeded — cannot index overview", false);
+      }
+    }
+
     // Mark INDEXING but keep any previous summary visible until the new one is READY.
     await prisma.projectOverview.upsert({
       where: { repositoryId },
@@ -124,7 +144,7 @@ export async function overviewProcessor(job: Job<OverviewJob>) {
     }
 
     let usage: LlmUsage = { promptTokens: 0, completionTokens: 0, costUsd: 0 };
-    const llmCtx = { repositoryId, log: createLlmCallLogger(prisma, repositoryId) };
+    const llmCtx = { repositoryId, log: createLlmCallLogger(prisma, repositoryId, repo.userId) };
 
     // 4. MAP — summarize each directory cluster
     const clusters = clusterByDirectory(files);
@@ -176,6 +196,15 @@ export async function overviewProcessor(job: Job<OverviewJob>) {
     await prisma.repository.updateMany({
       where: { id: repositoryId, connectionState: { in: ["INDEXING", "DETECTING"] } },
       data: { connectionState: "READY" },
+    });
+
+    // Token accounting (plan 09): add this index's tokens/cost to the monthly pool.
+    const month = new Date().getFullYear() * 100 + (new Date().getMonth() + 1);
+    const tokens = usage.promptTokens + usage.completionTokens;
+    await prisma.subscriptionUsage.upsert({
+      where: { userId_month: { userId: repo.userId, month } },
+      create: { userId: repo.userId, month, tokenUsed: tokens, costUsd: usage.costUsd },
+      update: { tokenUsed: { increment: tokens }, costUsd: { increment: usage.costUsd } },
     });
 
     // 7. backfill open PRs on the first successful index

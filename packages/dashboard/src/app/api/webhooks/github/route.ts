@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { enqueueAnalysis, enqueueOverview } from "@/lib/queue";
-import { checkQuota } from "@/lib/db/billing";
+import { checkQuota, checkTokenBudget } from "@/lib/db/billing";
 import {
   upsertInstallation,
   deleteInstallation,
@@ -215,6 +215,28 @@ export async function POST(req: Request) {
     }
     return NextResponse.json(
       { error: { code: "QUOTA_EXCEEDED", message: "Analysis quota exceeded" } },
+      { status: 402 }
+    );
+  }
+
+  // Token budget check (plan 09)
+  const tokenCheck = await checkTokenBudget(userId);
+  if (!tokenCheck.allowed) {
+    const dbPr = await prisma.pullRequest.findFirst({
+      where: { repositoryId: dbRepo.id, prNumber },
+    });
+    if (dbPr) {
+      await prisma.prAnalysis.create({
+        data: {
+          pullRequestId: dbPr.id,
+          status: "FAILED",
+          commitSha,
+          diagnosticMessage: "Token budget exceeded this month. Upgrade your plan or wait for the next cycle.",
+        },
+      });
+    }
+    return NextResponse.json(
+      { error: { code: "TOKEN_BUDGET_EXCEEDED", message: "Monthly token budget exceeded" } },
       { status: 402 }
     );
   }

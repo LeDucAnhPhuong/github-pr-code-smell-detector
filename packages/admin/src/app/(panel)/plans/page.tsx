@@ -12,6 +12,7 @@ export default async function PlansPage() {
     price: Number(p.price),
     repositoryLimit: p.repositoryLimit,
     analysisQuota: p.analysisQuota,
+    tokenQuota: p.tokenQuota,
     hasCheckAnnotations: p.hasCheckAnnotations,
     hasHistoricalReports: p.hasHistoricalReports,
     isActive: p.isActive,

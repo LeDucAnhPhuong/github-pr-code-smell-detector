@@ -381,6 +381,7 @@ model SubscriptionPlan {
   price                Decimal  @default(0) @db.Decimal(10, 2)
   repositoryLimit      Int
   analysisQuota        Int
+  tokenQuota           Int      @default(0) // LLM token budget / month; 0 = unlimited (plan 09)
   hasCheckAnnotations  Boolean  @default(false)
   hasHistoricalReports Boolean  @default(false)
   isActive             Boolean  @default(true)
@@ -399,6 +400,8 @@ model SubscriptionUsage {
   analysisCount   Int      @default(0)
   repositoryCount Int      @default(0)
   reportCount     Int      @default(0)
+  tokenUsed       Int      @default(0) // total prompt+completion tokens this month (plan 09)
+  costUsd         Decimal  @default(0) @db.Decimal(10, 4) // observability only, not enforced
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -492,6 +495,7 @@ model RepoRule {
 model LlmCallLog {
   id               String   @id @default(cuid())
   repositoryId     String?
+  userId           String? // owner of the repo — for per-user token/cost aggregation (plan 09)
   purpose          String // "overview_map" | "overview_reduce" | "pr_map" | "pr_reduce"
   model            String
   promptTokens     Int      @default(0)
@@ -503,5 +507,6 @@ model LlmCallLog {
   createdAt        DateTime @default(now())
 
   @@index([repositoryId])
+  @@index([userId])
   @@index([purpose])
 }

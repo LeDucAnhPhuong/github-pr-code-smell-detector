@@ -34,6 +34,7 @@ interface Plan {
   price: number;
   repositoryLimit: number;
   analysisQuota: number;
+  tokenQuota: number;
   hasCheckAnnotations: boolean;
   hasHistoricalReports: boolean;
   isActive: boolean;
@@ -45,6 +46,7 @@ const empty = {
   price: "0",
   repositoryLimit: "0",
   analysisQuota: "0",
+  tokenQuota: "0",
   hasCheckAnnotations: false,
   hasHistoricalReports: false,
   isActive: true,
@@ -78,6 +80,7 @@ export function PlansClient({ initial }: { initial: Plan[] }) {
       price: String(p.price),
       repositoryLimit: String(p.repositoryLimit),
       analysisQuota: String(p.analysisQuota),
+      tokenQuota: String(p.tokenQuota),
       hasCheckAnnotations: p.hasCheckAnnotations,
       hasHistoricalReports: p.hasHistoricalReports,
       isActive: p.isActive,
@@ -95,6 +98,7 @@ export function PlansClient({ initial }: { initial: Plan[] }) {
       price: Number(form.price) || 0,
       repositoryLimit: parseInt(form.repositoryLimit, 10) || 0,
       analysisQuota: parseInt(form.analysisQuota, 10) || 0,
+      tokenQuota: parseInt(form.tokenQuota, 10) || 0,
       hasCheckAnnotations: form.hasCheckAnnotations,
       hasHistoricalReports: form.hasHistoricalReports,
       isActive: form.isActive,
@@ -163,6 +167,7 @@ export function PlansClient({ initial }: { initial: Plan[] }) {
               <TableHead>Giá</TableHead>
               <TableHead>Giới hạn repo</TableHead>
               <TableHead>Quota phân tích</TableHead>
+              <TableHead>Quota token</TableHead>
               <TableHead>Tính năng</TableHead>
               <TableHead>Hoạt động</TableHead>
               <TableHead className="text-right">Thao tác</TableHead>
@@ -171,7 +176,7 @@ export function PlansClient({ initial }: { initial: Plan[] }) {
           <TableBody>
             {items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                   Chưa có gói nào.
                 </TableCell>
               </TableRow>
@@ -182,6 +187,9 @@ export function PlansClient({ initial }: { initial: Plan[] }) {
                 <TableCell>{p.price === 0 ? "Miễn phí" : `${p.price.toLocaleString("vi-VN")}₫/tháng`}</TableCell>
                 <TableCell className="text-muted-foreground">{p.repositoryLimit}</TableCell>
                 <TableCell className="text-muted-foreground">{p.analysisQuota.toLocaleString()}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {p.tokenQuota === 0 ? "∞" : p.tokenQuota.toLocaleString()}
+                </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
                     {p.hasCheckAnnotations && <Badge variant="secondary">Check annotations</Badge>}
@@ -257,6 +265,16 @@ export function PlansClient({ initial }: { initial: Plan[] }) {
                   min="0"
                   value={form.analysisQuota}
                   onChange={(e) => setForm({ ...form, analysisQuota: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="pl-token">Quota token / tháng (0 = không giới hạn)</Label>
+                <Input
+                  id="pl-token"
+                  type="number"
+                  min="0"
+                  value={form.tokenQuota}
+                  onChange={(e) => setForm({ ...form, tokenQuota: e.target.value })}
                 />
               </div>
             </div>
