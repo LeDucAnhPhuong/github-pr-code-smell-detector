@@ -15,7 +15,7 @@ export interface FindingRow {
   category: string;
   filePath: string;
   fileShort: string;
-  lineStart: number;
+  lineStart: number | null;
   status: string;
 }
 
@@ -69,7 +69,7 @@ export function FindingsTable({
       {
         accessorKey: "lineStart",
         header: t("colLine"),
-        cell: ({ getValue }) => <span className="muted">{getValue<number>()}</span>,
+        cell: ({ getValue }) => <span className="muted">{getValue<number | null>() ?? "—"}</span>,
       },
       {
         accessorKey: "status",

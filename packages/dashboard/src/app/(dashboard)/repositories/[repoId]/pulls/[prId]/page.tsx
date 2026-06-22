@@ -96,6 +96,33 @@ export default async function PRAnalysisDetailPage({ params }: { params: Promise
         </div>
       )}
 
+      {/* Quality Score + summary (LLM pipeline — plan 04) */}
+      {latestAnalysis?.status === "COMPLETED" && latestAnalysis.summary && (
+        <div className="card card-body" style={{ marginBottom: 18 }}>
+          <div className="row" style={{ gap: 12, alignItems: "center", marginBottom: 8 }}>
+            {latestAnalysis.qualityScore != null && (
+              <span
+                className="badge"
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  background: latestAnalysis.qualityScore <= 2 ? "var(--sev-high-bg)" : "var(--surface-2, var(--code-bg))",
+                  color: latestAnalysis.qualityScore <= 2 ? "var(--sev-high-ink)" : "var(--ink)",
+                }}
+              >
+                {t("qualityScore")}: {latestAnalysis.qualityScore}/5
+              </span>
+            )}
+            <span style={{ fontWeight: 600 }}>{latestAnalysis.summary}</span>
+          </div>
+          {latestAnalysis.qualityReasoning && (
+            <p className="secondary" style={{ margin: 0, fontSize: 13 }}>
+              {latestAnalysis.qualityReasoning}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Failed state */}
       {latestAnalysis?.status === "FAILED" && (
         <div
@@ -160,13 +187,16 @@ export default async function PRAnalysisDetailPage({ params }: { params: Promise
                   <td>
                     <SeverityBadge severity={f.severity} />
                   </td>
-                  <td className="mono secondary" style={{ fontSize: 12 }}>
-                    {f.ruleId}
+                  <td className="secondary" style={{ fontSize: 12 }}>
+                    <span className="badge badge-neutral" style={{ marginRight: 6 }}>
+                      {f.source === "custom" ? "Custom" : "System"}
+                    </span>
+                    {f.ruleName}
                   </td>
                   <td>
                     <span className="code">{f.filePath.split("/").slice(-2).join("/")}</span>
                   </td>
-                  <td className="muted">{f.lineStart}</td>
+                  <td className="muted">{f.lineStart ?? "—"}</td>
                   <td className="secondary">
                     {f.message.slice(0, 80)}
                     {f.message.length > 80 ? "…" : ""}

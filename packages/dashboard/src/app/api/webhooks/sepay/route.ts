@@ -6,6 +6,7 @@ import {
   isTransactionProcessed,
 } from "@/lib/db/payments";
 import { activateSubscription } from "@/lib/db/billing";
+import { suspendExcessRepositories } from "@/lib/actions/connect";
 import { extractOrderCode, SEPAY_WEBHOOK_API_KEY, type SepayWebhookPayload } from "@/lib/sepay";
 
 // SePay authenticates webhooks with a static "Authorization: Apikey <key>" header
@@ -66,6 +67,8 @@ export async function POST(req: Request) {
 
   await markOrderPaid(order.id, payload.id, payload.gateway ?? "");
   await activateSubscription(order.userId, order.planId, order.months);
+  // Enforce the (possibly lower) plan's repositoryLimit — suspend any excess (plan 01).
+  await suspendExcessRepositories(order.userId);
 
   return NextResponse.json({ success: true });
 }
