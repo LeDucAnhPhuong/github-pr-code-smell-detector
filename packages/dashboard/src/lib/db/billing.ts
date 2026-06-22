@@ -48,6 +48,33 @@ export async function checkQuota(userId: string): Promise<{ allowed: boolean; us
   return { allowed: used < limit, used, limit };
 }
 
+export { isWithinTokenBudget } from "@/lib/billing/token-budget";
+import { isWithinTokenBudget } from "@/lib/billing/token-budget";
+
+/**
+ * Monthly LLM token budget check (plan 09). `quota = 0` ⇒ unlimited.
+ * Returns the current month's used tokens vs the plan's tokenQuota.
+ */
+export async function checkTokenBudget(
+  userId: string
+): Promise<{ allowed: boolean; used: number; quota: number }> {
+  const subscription = await prisma.tenantSubscription.findUnique({
+    where: { userId },
+    include: { plan: true },
+  });
+  if (!subscription || subscription.status !== "ACTIVE") {
+    return { allowed: false, used: 0, quota: 0 };
+  }
+  const now = new Date();
+  const month = now.getFullYear() * 100 + (now.getMonth() + 1);
+  const usage = await prisma.subscriptionUsage.findUnique({
+    where: { userId_month: { userId, month } },
+  });
+  const used = usage?.tokenUsed ?? 0;
+  const quota = subscription.plan.tokenQuota;
+  return { allowed: isWithinTokenBudget(used, quota), used, quota };
+}
+
 export async function incrementUsage(userId: string) {
   const now = new Date();
   const month = now.getFullYear() * 100 + (now.getMonth() + 1);

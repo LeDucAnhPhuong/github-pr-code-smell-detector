@@ -545,8 +545,11 @@
     "noHistory": "No usage history yet.",
     "thMonth": "Month",
     "thAnalyses": "Analyses",
+    "thTokens": "Tokens",
     "thRepositories": "Repositories",
-    "thReports": "Reports"
+    "thReports": "Reports",
+    "tokenUsageTitle": "Token usage this month",
+    "unlimited": "Unlimited"
   },
   "checkoutPage": {
     "title": "Pay for the {plan} plan",

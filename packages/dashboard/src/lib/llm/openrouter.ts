@@ -45,11 +45,37 @@ export class LlmError extends Error {
  * of truth in production.
  */
 const DEFAULT_MODEL_MAP: Record<LlmPurpose, string[]> = {
-  overview_map: ["google/gemini-2.5-flash", "openai/gpt-4o-mini"],
-  overview_reduce: ["anthropic/claude-3.7-sonnet", "openai/gpt-4o"],
-  pr_map: ["anthropic/claude-3.5-sonnet", "openai/gpt-4o-mini"],
-  pr_reduce: ["anthropic/claude-3.7-sonnet", "openai/gpt-4o"],
+  // No Gemini — only DeepSeek / Claude (Sonnet, Haiku) / GPT. See plan 08.
+  overview_map: ["deepseek/deepseek-v3", "openai/gpt-5-mini"],
+  overview_reduce: ["openai/gpt-5", "anthropic/claude-sonnet-4.6"],
+  pr_map: ["openai/gpt-5-mini", "anthropic/claude-haiku-4.5"],
+  pr_reduce: ["anthropic/claude-sonnet-4.6", "openai/gpt-5"],
 };
+
+/**
+ * Output token cap per purpose (plan 09) — bounds worst-case overshoot of the
+ * monthly token budget. Override with OPENROUTER_MAX_TOKENS (JSON per purpose).
+ */
+const DEFAULT_MAX_TOKENS: Record<LlmPurpose, number> = {
+  overview_map: 512,
+  overview_reduce: 2000,
+  pr_map: 1500,
+  pr_reduce: 800,
+};
+
+export function maxTokensFor(purpose: LlmPurpose): number {
+  const raw = process.env.OPENROUTER_MAX_TOKENS;
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw) as Partial<Record<LlmPurpose, number>>;
+      const v = parsed[purpose];
+      if (typeof v === "number" && v > 0) return v;
+    } catch {
+      // fall through to defaults
+    }
+  }
+  return DEFAULT_MAX_TOKENS[purpose];
+}
 
 function modelsFor(purpose: LlmPurpose): string[] {
   const raw = process.env.OPENROUTER_MODEL_MAP;
@@ -170,7 +196,7 @@ export async function callLlm(opts: CallLlmOptions): Promise<LlmResult> {
               { role: "user", content: opts.user },
             ],
             temperature: opts.temperature ?? 0.2,
-            ...(opts.maxTokens ? { max_tokens: opts.maxTokens } : {}),
+            max_tokens: opts.maxTokens ?? maxTokensFor(opts.purpose),
             ...((): Record<string, unknown> => {
               const rf = responseFormat(opts);
               return rf ? { response_format: rf } : {};

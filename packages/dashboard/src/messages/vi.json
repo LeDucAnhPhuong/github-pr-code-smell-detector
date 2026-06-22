@@ -545,8 +545,11 @@
     "noHistory": "Chưa có lịch sử sử dụng.",
     "thMonth": "Tháng",
     "thAnalyses": "Phân tích",
+    "thTokens": "Token",
     "thRepositories": "Kho lưu trữ",
-    "thReports": "Báo cáo"
+    "thReports": "Báo cáo",
+    "tokenUsageTitle": "Token đã dùng tháng này",
+    "unlimited": "Không giới hạn"
   },
   "checkoutPage": {
     "title": "Thanh toán gói {plan}",

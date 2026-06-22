@@ -145,7 +145,7 @@ export async function analysisProcessor(job: Job<AnalysisJob>) {
     let usage: LlmUsage = { promptTokens: 0, completionTokens: 0, costUsd: 0 };
     let model: string | null = null;
     let truncatedAny = false;
-    const llmCtx = { repositoryId: repoId, log: createLlmCallLogger(prisma, repoId) };
+    const llmCtx = { repositoryId: repoId, log: createLlmCallLogger(prisma, repoId, repo.userId) };
 
     const astResult = await astResultPromise;
     const findings: NormalizedFinding[] = astResult.findings.map(normalizeAstFinding);
@@ -350,12 +350,17 @@ export async function analysisProcessor(job: Job<AnalysisJob>) {
       },
     });
 
-    // Monthly usage (quota — plan 05)
+    // Monthly usage: PR count (plan 05) + token/cost pool (plan 09)
     const month = new Date().getFullYear() * 100 + (new Date().getMonth() + 1);
+    const tokens = usage.promptTokens + usage.completionTokens;
     await prisma.subscriptionUsage.upsert({
       where: { userId_month: { userId: repo.userId, month } },
-      create: { userId: repo.userId, month, analysisCount: 1 },
-      update: { analysisCount: { increment: 1 } },
+      create: { userId: repo.userId, month, analysisCount: 1, tokenUsed: tokens, costUsd: usage.costUsd },
+      update: {
+        analysisCount: { increment: 1 },
+        tokenUsed: { increment: tokens },
+        costUsd: { increment: usage.costUsd },
+      },
     });
   } catch (err) {
     await prisma.prAnalysis.update({
