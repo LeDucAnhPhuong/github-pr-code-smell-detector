@@ -19,6 +19,16 @@ export async function getRepository(id: string, userId: string) {
   });
 }
 
+/** The Project Overview for a repo the user owns (or null). */
+export async function getProjectOverview(repoId: string, userId: string) {
+  const repo = await prisma.repository.findFirst({
+    where: { id: repoId, userId },
+    select: { id: true },
+  });
+  if (!repo) return null;
+  return prisma.projectOverview.findUnique({ where: { repositoryId: repoId } });
+}
+
 export async function getRepositoryByFullName(fullName: string, userId: string) {
   return prisma.repository.findFirst({
     where: { fullName, userId },

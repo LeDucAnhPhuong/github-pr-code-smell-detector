@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useTransition } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/DataTable";
+import { disconnectRepository, reactivateRepository } from "@/lib/actions/connect";
 
 export interface RepoRow {
   id: string;
@@ -15,10 +16,21 @@ export interface RepoRow {
   openPRs: number;
   updatedAtMs: number;
   updatedAtLabel: string;
+  connectionState: string;
 }
+
+const STATE_DOT: Record<string, string> = {
+  READY: "var(--ok-dot)",
+  INDEXING: "var(--run-dot)",
+  DETECTING: "var(--run-dot)",
+  SUSPENDED: "var(--idle-dot)",
+  REJECTED: "var(--fail-dot)",
+  INDEX_FAILED: "var(--fail-dot)",
+};
 
 export function RepositoriesTable({ rows }: { rows: RepoRow[] }) {
   const t = useTranslations("repositories");
+  const [pending, startTransition] = useTransition();
   const columns = useMemo<ColumnDef<RepoRow>[]>(
     () => [
       {
@@ -46,12 +58,16 @@ export function RepositoriesTable({ rows }: { rows: RepoRow[] }) {
         id: "status",
         header: t("colStatus"),
         enableSorting: false,
-        cell: () => (
-          <span className="status">
-            <span className="dot" style={{ background: "var(--ok-dot)" }} />
-            {t("connected")}
-          </span>
-        ),
+        cell: ({ row }) => {
+          const s = row.original.connectionState;
+          const label = s === "READY" ? t("connected") : t(`state${s}`);
+          return (
+            <span className="status">
+              <span className="dot" style={{ background: STATE_DOT[s] ?? "var(--idle-dot)" }} />
+              {label}
+            </span>
+          );
+        },
       },
       {
         accessorKey: "openPRs",
@@ -74,14 +90,38 @@ export function RepositoriesTable({ rows }: { rows: RepoRow[] }) {
         header: "",
         enableSorting: false,
         enableHiding: false,
-        cell: ({ row }) => (
-          <Link className="link" href={`/repositories/${row.original.id}`}>
-            {t("view")}
-          </Link>
-        ),
+        cell: ({ row }) => {
+          const { id, connectionState } = row.original;
+          return (
+            <div className="row" style={{ gap: 10, justifyContent: "flex-end" }}>
+              <Link className="link" href={`/repositories/${id}`}>
+                {t("view")}
+              </Link>
+              {connectionState === "SUSPENDED" && (
+                <button
+                  className="link"
+                  disabled={pending}
+                  onClick={() => startTransition(async () => { await reactivateRepository(id); })}
+                >
+                  {t("reactivate")}
+                </button>
+              )}
+              <button
+                className="link"
+                disabled={pending}
+                style={{ color: "var(--fail-dot)" }}
+                onClick={() => {
+                  if (confirm(t("confirmDisconnect"))) startTransition(async () => { await disconnectRepository(id); });
+                }}
+              >
+                {t("disconnect")}
+              </button>
+            </div>
+          );
+        },
       },
     ],
-    [t]
+    [t, pending]
   );
 
   return (

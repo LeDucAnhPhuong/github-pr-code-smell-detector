@@ -61,31 +61,27 @@ export interface InstallationRepo {
   language?: string | null;
 }
 
-/** Upsert the repositories a user granted to an installation. Idempotent. */
+/**
+ * Re-link installation metadata onto repos the user has ALREADY connected.
+ *
+ * Install ≠ connect (plan 01): granting the App access to repos does NOT create
+ * connected Repository rows — the user must explicitly Connect each repo (which
+ * runs framework detection + consent + limit). So this only UPDATES existing
+ * connected repos' installationId/meta; it never creates new ones.
+ */
 export async function connectInstallationRepos(
   userId: string,
   installationId: number,
   repos: InstallationRepo[]
 ) {
   for (const r of repos) {
-    await prisma.repository.upsert({
-      where: { userId_fullName: { userId, fullName: r.fullName } },
-      create: {
-        userId,
-        githubId: r.githubId,
-        owner: r.owner,
-        name: r.name,
-        fullName: r.fullName,
-        defaultBranch: r.defaultBranch ?? "main",
-        isPrivate: r.isPrivate ?? false,
-        language: r.language ?? null,
+    await prisma.repository.updateMany({
+      where: { userId, fullName: r.fullName },
+      data: {
         installationId,
-      },
-      update: {
-        installationId,
-        defaultBranch: r.defaultBranch ?? "main",
-        isPrivate: r.isPrivate ?? false,
-        language: r.language ?? null,
+        defaultBranch: r.defaultBranch ?? undefined,
+        isPrivate: r.isPrivate ?? undefined,
+        language: r.language ?? undefined,
       },
     });
   }

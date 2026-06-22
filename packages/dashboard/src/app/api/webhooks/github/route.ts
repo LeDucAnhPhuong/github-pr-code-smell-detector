@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { prisma } from "@/lib/prisma";
-import { analysisQueue } from "@/lib/queue";
+import { enqueueAnalysis, enqueueOverview } from "@/lib/queue";
 import { checkQuota } from "@/lib/db/billing";
 import {
   upsertInstallation,
@@ -83,6 +83,39 @@ async function handleInstallationEvent(event: string, payload: Record<string, un
   }
 }
 
+/**
+ * push event → auto re-index the Project Overview when the default branch moves
+ * (plan 02). Debounced: a stable per-repo jobId + a short delay collapse bursty
+ * pushes so only the newest SHA gets indexed. The old overview stays visible
+ * (status READY) until the new one is built.
+ */
+async function handlePushEvent(payload: Record<string, unknown>) {
+  const ref = payload.ref as string | undefined;
+  const after = payload.after as string | undefined;
+  const repo = payload.repository as Record<string, unknown> | undefined;
+  const installation = payload.installation as { id: number } | undefined;
+  if (!ref || !after || !repo || !installation) return;
+
+  // Deleted branch / zero sha → nothing to index.
+  if (/^0+$/.test(after)) return;
+
+  const fullName = (repo.full_name as string) ?? "";
+  const dbRepo = await prisma.repository.findFirst({
+    where: { fullName, installationId: installation.id },
+    include: { overview: { select: { indexedSha: true } } },
+  });
+  if (!dbRepo) return;
+
+  // Only the user-selected default branch triggers a re-index.
+  if (ref !== `refs/heads/${dbRepo.defaultBranch}`) return;
+
+  // Already indexed at this commit → skip.
+  if (dbRepo.overview?.indexedSha === after) return;
+
+  const delayMs = Number(process.env.OVERVIEW_DEBOUNCE_MS ?? 30_000);
+  await enqueueOverview({ repositoryId: dbRepo.id, installationId: installation.id, sha: after }, { delayMs });
+}
+
 export async function POST(req: Request) {
   const rawBody = await req.text();
   const signature = req.headers.get("x-hub-signature-256") ?? "";
@@ -97,8 +130,13 @@ export async function POST(req: Request) {
     );
   }
 
-  // Handle pull_request + installation lifecycle events
-  if (event !== "pull_request" && event !== "installation" && event !== "installation_repositories") {
+  // Handle pull_request + installation lifecycle + push (overview re-index) events
+  if (
+    event !== "pull_request" &&
+    event !== "installation" &&
+    event !== "installation_repositories" &&
+    event !== "push"
+  ) {
     return NextResponse.json({ data: { ignored: true } }, { status: 200 });
   }
 
@@ -111,6 +149,11 @@ export async function POST(req: Request) {
 
   if (event === "installation" || event === "installation_repositories") {
     await handleInstallationEvent(event, payload);
+    return NextResponse.json({ data: { ok: true } }, { status: 200 });
+  }
+
+  if (event === "push") {
+    await handlePushEvent(payload);
     return NextResponse.json({ data: { ok: true } }, { status: 200 });
   }
 
@@ -135,6 +178,20 @@ export async function POST(req: Request) {
 
   if (!dbRepo) {
     return NextResponse.json({ data: { ignored: true, reason: "repository not connected" } }, { status: 200 });
+  }
+
+  // Guard (plan 01): only fully-connected, READY repos get PR analysis. Repos
+  // that are DETECTING/INDEXING/REJECTED/INDEX_FAILED/SUSPENDED are ignored.
+  if (dbRepo.connectionState !== "READY") {
+    return NextResponse.json(
+      { data: { ignored: true, reason: `repository not READY (${dbRepo.connectionState})` } },
+      { status: 200 }
+    );
+  }
+
+  // Skip draft PRs (plan 04 guard).
+  if ((pr.draft as boolean | undefined) === true) {
+    return NextResponse.json({ data: { ignored: true, reason: "draft PR" } }, { status: 200 });
   }
 
   const userId = dbRepo.userId;
@@ -184,6 +241,13 @@ export async function POST(req: Request) {
     },
   });
 
+  // Supersede any prior not-yet-started analysis for this PR (debounce): a newer
+  // push makes pending older-commit analyses obsolete.
+  await prisma.prAnalysis.updateMany({
+    where: { pullRequestId: dbPr.id, status: "PENDING" },
+    data: { status: "FAILED", diagnosticMessage: "Superseded by a newer commit", completedAt: new Date() },
+  });
+
   // Create analysis record
   const analysis = await prisma.prAnalysis.create({
     data: {
@@ -193,8 +257,8 @@ export async function POST(req: Request) {
     },
   });
 
-  // Enqueue BullMQ job
-  await analysisQueue.add("analyze-pr", {
+  // Enqueue with a stable per-PR jobId so rapid pushes debounce to the latest.
+  await enqueueAnalysis(dbPr.id, {
     prAnalysisId: analysis.id,
     repoId: dbRepo.id,
     prNumber,

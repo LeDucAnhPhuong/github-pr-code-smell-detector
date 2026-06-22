@@ -66,6 +66,27 @@ enum PaymentStatus {
   FAILED
 }
 
+enum OverviewStatus {
+  PENDING
+  INDEXING
+  READY
+  FAILED
+}
+
+enum RepoConnectionState {
+  DETECTING
+  REJECTED
+  INDEXING
+  READY
+  INDEX_FAILED
+  SUSPENDED
+}
+
+enum RuleSource {
+  system
+  custom
+}
+
 // ─── Auth.js v5 required models ───────────────────────────────────────────────
 
 // 1. users
@@ -144,8 +165,16 @@ model Repository {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // ─ LLM migration: connect flow (plan 01) ─
+  connectionState RepoConnectionState @default(DETECTING)
+  frameworkId     String?
+  consentedAt     DateTime?
+  rejectedReason  String?
+
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   pullRequests PullRequest[]
+  overview     ProjectOverview?
+  repoRules    RepoRule[]
 
   @@unique([userId, fullName])
   @@index([userId])
@@ -188,6 +217,17 @@ model PrAnalysis {
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
 
+  // ─ LLM migration: PR analysis (plan 04) ─
+  summary          String?  @db.Text
+  qualityScore     Int? // 1..5, after clamp
+  qualityReasoning String?  @db.Text
+  truncated        Boolean  @default(false)
+  commentId        String? // GitHub issue-comment id for edit-in-place
+  model            String?
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  costUsd          Decimal  @default(0) @db.Decimal(10, 4)
+
   pullRequest      PullRequest       @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
   changedFiles     ChangedFile[]
   findings         Finding[]
@@ -219,11 +259,13 @@ model ChangedFile {
 model Finding {
   id           String        @id @default(cuid())
   prAnalysisId String
-  ruleId       String
+  ruleId       String? // FK to a built-in Rule (system). Null for custom/LLM findings.
+  repoRuleId   String? // FK to a RepoRule (custom). Null for system findings.
+  source       RuleSource    @default(system)
   ruleName     String
   severity     Severity
   filePath     String
-  lineStart    Int
+  lineStart    Int? // nullable: LLM may report a file-level finding it can't pin to a line
   lineEnd      Int?
   columnStart  Int?
   message      String        @db.Text
@@ -234,9 +276,11 @@ model Finding {
 
   prAnalysis PrAnalysis @relation(fields: [prAnalysisId], references: [id], onDelete: Cascade)
   rule       Rule?      @relation(fields: [ruleId], references: [id])
+  repoRule   RepoRule?  @relation(fields: [repoRuleId], references: [id], onDelete: SetNull)
 
   @@index([prAnalysisId])
   @@index([ruleId])
+  @@index([repoRuleId])
 }
 
 // 7. rules (admin-managed, global — no userId)
@@ -401,4 +445,63 @@ model PaymentOrder {
 
   @@index([userId])
   @@index([status])
+}
+
+// 17. project_overviews — LLM-built summary of a repo's default branch.
+// Stored as markdown (for the Overview tab) + structured JSON metadata (machine
+// use: injected as background context into PR analysis). No vectors in Phase 1.
+model ProjectOverview {
+  id               String         @id @default(cuid())
+  repositoryId     String         @unique
+  status           OverviewStatus @default(PENDING)
+  indexedSha       String? // commit the current overview was built from → detect stale
+  summaryMd        String?        @db.Text // markdown for the Overview tab + full inject
+  metadata         Json? // { stack, architecture[], modules[], conventions[], domain[], dependencies[] }
+  filesScanned     Int            @default(0)
+  promptTokens     Int            @default(0)
+  completionTokens Int            @default(0)
+  costUsd          Decimal        @default(0) @db.Decimal(10, 4)
+  errorMessage     String?        @db.Text
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+}
+
+// 18. repo_rules — user-authored, per-repo custom rules (markdown source of truth).
+// Evaluated by the LLM (built-in `Rule` stays AST). See plan 03.
+model RepoRule {
+  id           String   @id @default(cuid())
+  repositoryId String
+  title        String
+  severity     Severity @default(warning)
+  appliesTo    String[] // globs, e.g. ["src/ui/**", "**/*.tsx"]; empty = global
+  bodyMd       String   @db.Text // raw markdown — source of truth
+  isActive     Boolean  @default(true)
+  version      Int      @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  repository Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  findings   Finding[]
+
+  @@index([repositoryId])
+}
+
+// 19. llm_call_logs — token/cost/latency per LLM call (no code content). See plan 05.
+model LlmCallLog {
+  id               String   @id @default(cuid())
+  repositoryId     String?
+  purpose          String // "overview_map" | "overview_reduce" | "pr_map" | "pr_reduce"
+  model            String
+  promptTokens     Int      @default(0)
+  completionTokens Int      @default(0)
+  costUsd          Decimal  @default(0) @db.Decimal(10, 4)
+  latencyMs        Int?
+  success          Boolean  @default(true)
+  errorMessage     String?  @db.Text
+  createdAt        DateTime @default(now())
+
+  @@index([repositoryId])
+  @@index([purpose])
 }

@@ -33,13 +33,20 @@ export default async function RepositoriesPage() {
     openPRs: repo.pullRequests.length,
     updatedAtMs: new Date(repo.updatedAt).getTime(),
     updatedAtLabel: relativeTime(repo.updatedAt, tTime),
+    connectionState: repo.connectionState,
   }));
 
   return (
     <div className="page-w">
       <div className="between" style={{ marginBottom: 18 }}>
         <h1 className="h1">{t("title")}</h1>
-        <InstallLink label={t("installManage")} />
+        <div className="row" style={{ gap: 8 }}>
+          <Link href="/repositories/connect" className="btn btn-primary">
+            <GitBranch className="w-4 h-4" />
+            {t("connectCta")}
+          </Link>
+          <InstallLink label={t("installManage")} />
+        </div>
       </div>
 
       {repos.length === 0 ? (

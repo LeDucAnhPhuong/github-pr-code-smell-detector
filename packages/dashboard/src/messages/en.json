@@ -68,7 +68,9 @@
     "COMPLETED": "Completed",
     "RUNNING": "Running",
     "FAILED": "Failed",
-    "PENDING": "Pending"
+    "PENDING": "Pending",
+    "INDEXING": "Indexing",
+    "READY": "Ready"
   },
   "severity": {
     "high": "High",
@@ -102,7 +104,16 @@
     "colUpdated": "Updated",
     "view": "View",
     "searchPlaceholder": "Search repositories…",
-    "emptyFiltered": "No repositories match your filters."
+    "emptyFiltered": "No repositories match your filters.",
+    "disconnect": "Disconnect",
+    "reactivate": "Reactivate",
+    "confirmDisconnect": "Disconnect this repository? Its analyses and overview will be removed.",
+    "stateREADY": "Ready",
+    "stateINDEXING": "Indexing",
+    "stateDETECTING": "Detecting",
+    "stateREJECTED": "Rejected",
+    "stateINDEX_FAILED": "Index failed",
+    "stateSUSPENDED": "Suspended"
   },
   "connectRepo": {
     "connectButton": "Connect repository",
@@ -117,7 +128,15 @@
     "permissionNote": "Repository access is scoped to your authorized GitHub permissions.",
     "cancel": "Cancel",
     "connecting": "Connecting…",
-    "connectSelected": "Connect selected ({count})"
+    "connectSelected": "Connect selected ({count})",
+    "consentLabel": "I agree to let the system read and send this repository's source code to the LLM provider for analysis.",
+    "consentRequired": "You must accept the consent to connect.",
+    "connected": "Connected",
+    "resultErrors": "Some repositories could not be connected:",
+    "breadcrumbRepos": "Repositories",
+    "pageTitle": "Connect a repository",
+    "pageDesc": "Choose a repository the app can access. We detect its framework, then build a Project Overview before analyzing PRs.",
+    "connectedOk": "Connected ({framework}) — indexing started."
   },
   "repoConfig": {
     "navGeneral": "General",
@@ -248,6 +267,7 @@
     "noReposTitle": "No repositories connected",
     "noReposDesc": "Install the GitHub App and choose repos to start analyzing Pull Requests — no workflow file needed.",
     "installApp": "Install GitHub App",
+    "connectCta": "Connect repository",
     "private": "Private",
     "public": "Public"
   },
@@ -259,6 +279,7 @@
     "latestAnalysis": "Latest analysis",
     "activeRules": "Active rules",
     "findingsLast7": "Findings last 7 days",
+    "tabOverview": "Overview",
     "tabPulls": "Pull Requests",
     "tabReports": "Reports",
     "tabConfig": "Configuration",
@@ -271,6 +292,21 @@
     "thUpdated": "Updated",
     "findingsCount": "{total} ({high} high)",
     "view": "View"
+  },
+  "overviewTab": {
+    "breadcrumbRepos": "Repositories",
+    "breadcrumb": "Overview",
+    "updating": "Updating…",
+    "indexedAt": "Indexed at {sha} · {files} files · {cost}",
+    "pending": "Overview not built yet. It will be generated automatically once the repository is connected.",
+    "indexing": "Building the project overview… this runs in the background.",
+    "failed": "Overview indexing failed",
+    "stack": "Tech stack",
+    "modules": "Main modules",
+    "conventions": "Conventions",
+    "domain": "Domain concepts",
+    "dependencies": "Key dependencies",
+    "summary": "Summary"
   },
   "configPage": {
     "breadcrumbRepos": "Repositories",
@@ -311,7 +347,24 @@
     "thThreshold": "Threshold",
     "thBlocking": "Blocking",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "systemRulesTitle": "System rules",
+    "systemRulesDesc": "Built-in rules (AST) for this repository's framework. Toggle which ones apply.",
+    "customRulesTitle": "Your rules",
+    "customRulesDesc": "Per-repo custom rules written in markdown and checked by the LLM.",
+    "addRule": "Add rule",
+    "noCustomRules": "No custom rules yet. Add one from a template to get started.",
+    "thAppliesTo": "Applies to",
+    "global": "All files",
+    "confirmDelete": "Delete this rule?",
+    "editRule": "Edit rule",
+    "newRule": "New rule",
+    "templates": "Templates",
+    "enable": "Enable",
+    "disable": "Disable",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving…"
   },
   "pullsPage": {
     "breadcrumbRepos": "Repositories",
@@ -333,6 +386,7 @@
     "breadcrumbPulls": "Pull Requests",
     "noAnalysisYet": "No analysis yet",
     "openInGithub": "Open in GitHub",
+    "qualityScore": "Quality Score",
     "totalFindings": "Total findings",
     "high": "High",
     "medium": "Medium",

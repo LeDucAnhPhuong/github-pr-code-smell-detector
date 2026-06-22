@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { RepoTabs } from "@/components/repo/RepoTabs";
 import { ExternalLink, Settings } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { relativeTime } from "@/lib/relative-time";
@@ -97,24 +98,7 @@ export default async function RepoDetailPage({ params }: { params: Promise<{ rep
 
       {/* Pull Requests */}
       <div className="card" style={{ overflow: "hidden" }}>
-        <div className="row" style={{ gap: 2, padding: "8px 12px 0", borderBottom: "1px solid var(--border)" }}>
-          {[t("tabPulls"), t("tabReports"), t("tabConfig")].map((tab, i) => (
-            <Link
-              key={tab}
-              href={i === 0 ? `/repositories/${repoId}/pulls` : i === 1 ? `/repositories/${repoId}/reports` : `/repositories/${repoId}/config`}
-              style={{
-                padding: "8px 10px",
-                fontSize: 13,
-                marginBottom: -1,
-                borderBottom: `2px solid ${i === 0 ? "var(--ink)" : "transparent"}`,
-                color: i === 0 ? "var(--ink)" : "var(--ink-2)",
-                fontWeight: i === 0 ? 500 : 400,
-              }}
-            >
-              {tab}
-            </Link>
-          ))}
-        </div>
+        <RepoTabs repoId={repoId} active="pulls" />
 
         {pullRequests.length === 0 ? (
           <div style={{ padding: 32, textAlign: "center", fontSize: 13, color: "var(--ink-3)" }}>

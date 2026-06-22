@@ -68,7 +68,9 @@
     "COMPLETED": "Hoàn thành",
     "RUNNING": "Đang chạy",
     "FAILED": "Thất bại",
-    "PENDING": "Đang chờ"
+    "PENDING": "Đang chờ",
+    "INDEXING": "Đang lập chỉ mục",
+    "READY": "Sẵn sàng"
   },
   "severity": {
     "high": "Cao",
@@ -102,7 +104,16 @@
     "colUpdated": "Cập nhật",
     "view": "Xem",
     "searchPlaceholder": "Tìm kho lưu trữ…",
-    "emptyFiltered": "Không có kho lưu trữ nào khớp bộ lọc."
+    "emptyFiltered": "Không có kho lưu trữ nào khớp bộ lọc.",
+    "disconnect": "Ngắt kết nối",
+    "reactivate": "Kích hoạt lại",
+    "confirmDisconnect": "Ngắt kết nối repo này? Các phân tích và overview sẽ bị xóa.",
+    "stateREADY": "Sẵn sàng",
+    "stateINDEXING": "Đang lập chỉ mục",
+    "stateDETECTING": "Đang dò",
+    "stateREJECTED": "Bị từ chối",
+    "stateINDEX_FAILED": "Lập chỉ mục thất bại",
+    "stateSUSPENDED": "Tạm dừng"
   },
   "connectRepo": {
     "connectButton": "Kết nối kho lưu trữ",
@@ -117,7 +128,15 @@
     "permissionNote": "Quyền truy cập kho lưu trữ bị giới hạn theo quyền GitHub bạn đã cấp.",
     "cancel": "Hủy",
     "connecting": "Đang kết nối…",
-    "connectSelected": "Kết nối mục đã chọn ({count})"
+    "connectSelected": "Kết nối mục đã chọn ({count})",
+    "consentLabel": "Tôi đồng ý cho hệ thống đọc và gửi mã nguồn của repo này tới nhà cung cấp LLM để phân tích.",
+    "consentRequired": "Bạn phải đồng ý điều khoản để kết nối.",
+    "connected": "Đã kết nối",
+    "resultErrors": "Một số kho lưu trữ không kết nối được:",
+    "breadcrumbRepos": "Kho lưu trữ",
+    "pageTitle": "Kết nối kho lưu trữ",
+    "pageDesc": "Chọn repo mà app có quyền truy cập. Hệ thống dò framework, sau đó xây Project Overview trước khi phân tích PR.",
+    "connectedOk": "Đã kết nối ({framework}) — bắt đầu lập chỉ mục."
   },
   "repoConfig": {
     "navGeneral": "Chung",
@@ -248,6 +267,7 @@
     "noReposTitle": "Chưa kết nối kho lưu trữ nào",
     "noReposDesc": "Cài GitHub App và chọn repo để bắt đầu phân tích Pull Request — không cần file workflow.",
     "installApp": "Cài GitHub App",
+    "connectCta": "Kết nối kho lưu trữ",
     "private": "Riêng tư",
     "public": "Công khai"
   },
@@ -259,6 +279,7 @@
     "latestAnalysis": "Phân tích mới nhất",
     "activeRules": "Quy tắc đang bật",
     "findingsLast7": "Phát hiện 7 ngày qua",
+    "tabOverview": "Tổng quan",
     "tabPulls": "Pull Request",
     "tabReports": "Báo cáo",
     "tabConfig": "Cấu hình",
@@ -271,6 +292,21 @@
     "thUpdated": "Cập nhật",
     "findingsCount": "{total} ({high} cao)",
     "view": "Xem"
+  },
+  "overviewTab": {
+    "breadcrumbRepos": "Kho lưu trữ",
+    "breadcrumb": "Tổng quan",
+    "updating": "Đang cập nhật…",
+    "indexedAt": "Đã index ở commit {sha} · {files} file · {cost}",
+    "pending": "Chưa xây dựng tổng quan. Hệ thống sẽ tự tạo sau khi kho được kết nối.",
+    "indexing": "Đang xây dựng tổng quan dự án… tác vụ chạy nền.",
+    "failed": "Lập chỉ mục tổng quan thất bại",
+    "stack": "Công nghệ sử dụng",
+    "modules": "Module chính",
+    "conventions": "Quy ước",
+    "domain": "Khái niệm nghiệp vụ",
+    "dependencies": "Thư viện chính",
+    "summary": "Tóm tắt"
   },
   "configPage": {
     "breadcrumbRepos": "Kho lưu trữ",
@@ -311,7 +347,24 @@
     "thThreshold": "Ngưỡng",
     "thBlocking": "Chặn",
     "yes": "Có",
-    "no": "Không"
+    "no": "Không",
+    "systemRulesTitle": "Quy tắc hệ thống",
+    "systemRulesDesc": "Quy tắc built-in (AST) theo framework của repo. Bật/tắt quy tắc áp dụng.",
+    "customRulesTitle": "Quy tắc của bạn",
+    "customRulesDesc": "Quy tắc riêng theo repo viết bằng markdown, kiểm tra bằng LLM.",
+    "addRule": "Thêm quy tắc",
+    "noCustomRules": "Chưa có quy tắc tùy chỉnh. Thêm từ mẫu để bắt đầu.",
+    "thAppliesTo": "Áp dụng cho",
+    "global": "Mọi file",
+    "confirmDelete": "Xóa quy tắc này?",
+    "editRule": "Sửa quy tắc",
+    "newRule": "Quy tắc mới",
+    "templates": "Mẫu",
+    "enable": "Bật",
+    "disable": "Tắt",
+    "cancel": "Hủy",
+    "save": "Lưu",
+    "saving": "Đang lưu…"
   },
   "pullsPage": {
     "breadcrumbRepos": "Kho lưu trữ",
@@ -333,6 +386,7 @@
     "breadcrumbPulls": "Pull Request",
     "noAnalysisYet": "Chưa có phân tích",
     "openInGithub": "Mở trong GitHub",
+    "qualityScore": "Điểm chất lượng",
     "totalFindings": "Tổng phát hiện",
     "high": "Cao",
     "medium": "Trung bình",
