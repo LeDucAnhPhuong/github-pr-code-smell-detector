@@ -10,9 +10,12 @@ export const overviewQueue = new Queue<OverviewJob>("overview", {
   connection: redisConnection(),
 });
 
-/** Stable analysis job id per PR so rapid pushes debounce to the newest commit. */
+/**
+ * Stable analysis job id per PR so rapid pushes debounce to the newest commit.
+ * NOTE: BullMQ rejects a custom job id containing ":", so use "-" as separator.
+ */
 export function analysisJobId(pullRequestId: string): string {
-  return `analysis:${pullRequestId}`;
+  return `analysis-${pullRequestId}`;
 }
 
 /**
@@ -44,9 +47,12 @@ export async function enqueueAnalysis(
   });
 }
 
-/** Stable job id per repo so rapid pushes debounce to one queued re-index. */
+/**
+ * Stable job id per repo so rapid pushes debounce to one queued re-index.
+ * NOTE: BullMQ rejects a custom job id containing ":", so use "-" as separator.
+ */
 export function overviewJobId(repositoryId: string): string {
-  return `overview:${repositoryId}`;
+  return `overview-${repositoryId}`;
 }
 
 /**

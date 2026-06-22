@@ -193,7 +193,10 @@ export const REDUCE_JSON_SCHEMA = {
     required: ["summary", "qualityScore", "qualityReasoning"],
     properties: {
       summary: { type: "string" },
-      qualityScore: { type: "integer", minimum: 1, maximum: 5 },
+      // NOTE: no minimum/maximum — Anthropic structured output rejects numeric
+      // bounds on integer ("maximum/minimum are not supported"). The 1..5 range
+      // is enforced downstream by Zod (qualityScore coerce + clamp).
+      qualityScore: { type: "integer" },
       qualityReasoning: { type: "string" },
     },
   },

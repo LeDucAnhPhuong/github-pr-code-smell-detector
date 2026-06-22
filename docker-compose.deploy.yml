@@ -86,6 +86,12 @@ services:
       SEPAY_BANK_ACCOUNT: ${SEPAY_BANK_ACCOUNT}
       SEPAY_BANK_CODE: ${SEPAY_BANK_CODE}
       SEPAY_ACCOUNT_NAME: ${SEPAY_ACCOUNT_NAME}
+      # OpenRouter (LLM: Overview indexing + PR analysis)
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_MODEL_MAP: ${OPENROUTER_MODEL_MAP}
+      OPENROUTER_MAX_TOKENS: ${OPENROUTER_MAX_TOKENS}
+      OPENROUTER_APP_URL: ${OPENROUTER_APP_URL}
+      OPENROUTER_APP_TITLE: ${OPENROUTER_APP_TITLE}
     depends_on:
       postgres:
         condition: service_healthy
@@ -173,6 +179,12 @@ services:
       REDIS_URL: ${REDIS_URL}
       GITHUB_APP_ID: ${GITHUB_APP_ID}
       GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY}
+      # OpenRouter (LLM: Overview indexing + PR analysis) — worker runs the jobs
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
+      OPENROUTER_MODEL_MAP: ${OPENROUTER_MODEL_MAP}
+      OPENROUTER_MAX_TOKENS: ${OPENROUTER_MAX_TOKENS}
+      OPENROUTER_APP_URL: ${OPENROUTER_APP_URL}
+      OPENROUTER_APP_TITLE: ${OPENROUTER_APP_TITLE}
     depends_on:
       redis:
         condition: service_healthy

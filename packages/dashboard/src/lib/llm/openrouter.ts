@@ -58,7 +58,7 @@ const DEFAULT_MODEL_MAP: Record<LlmPurpose, string[]> = {
  */
 const DEFAULT_MAX_TOKENS: Record<LlmPurpose, number> = {
   overview_map: 512,
-  overview_reduce: 2000,
+  overview_reduce: 6000,
   pr_map: 1500,
   pr_reduce: 800,
 };
