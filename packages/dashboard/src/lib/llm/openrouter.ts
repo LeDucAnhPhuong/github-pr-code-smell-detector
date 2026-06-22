@@ -46,7 +46,7 @@ export class LlmError extends Error {
  */
 const DEFAULT_MODEL_MAP: Record<LlmPurpose, string[]> = {
   // No Gemini — only DeepSeek / Claude (Sonnet, Haiku) / GPT. See plan 08.
-  overview_map: ["deepseek/deepseek-v3", "openai/gpt-5-mini"],
+  overview_map: ["deepseek/deepseek-v3.2", "openai/gpt-5-mini"],
   overview_reduce: ["openai/gpt-5", "anthropic/claude-sonnet-4.6"],
   pr_map: ["openai/gpt-5-mini", "anthropic/claude-haiku-4.5"],
   pr_reduce: ["anthropic/claude-sonnet-4.6", "openai/gpt-5"],
